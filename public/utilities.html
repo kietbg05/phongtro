@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chốt Điện Nước Hàng Loạt | Quản Lý Phòng Trọ</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .input-utility {
+            width: 100px;
+            background: rgba(255,255,255,0.05) !important;
+            color: #fff !important;
+            border: 1px solid rgba(255,255,255,0.1) !important;
+            text-align: center;
+        }
+        .input-utility:focus {
+            border-color: #0d6efd !important;
+            box-shadow: 0 0 5px rgba(13, 110, 253, 0.5);
+        }
+        .consumption {
+            font-weight: bold;
+            color: #ffc107;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="wrapper d-flex">
+        <!-- Sidebar -->
+        <nav id="sidebar">
+            <div class="sidebar-header">
+                <i class="fas fa-home-user me-2"></i> QUẢN LÝ PHÒNG
+            </div>
+            <ul class="list-unstyled components">
+                <li><a href="index.html"><i class="fas fa-tachometer-alt me-2"></i> Tổng quan</a></li>
+                <li><a href="areas.html"><i class="fas fa-building me-2"></i> Khu trọ</a></li>
+                <li><a href="rooms.html"><i class="fas fa-door-open me-2"></i> Phòng trọ</a></li>
+                <li class="active"><a href="utilities.html"><i class="fas fa-bolt me-2"></i> Chốt điện nước</a></li>
+                <li><a href="tenants.html"><i class="fas fa-users me-2"></i> Khách thuê</a></li>
+                <li><a href="services.html"><i class="fas fa-concierge-bell me-2"></i> Dịch vụ/Phí</a></li>
+                <li><a href="contracts.html"><i class="fas fa-file-contract me-2"></i> Hợp đồng</a></li>
+                <li><a href="invoices.html"><i class="fas fa-file-invoice-dollar me-2"></i> Hóa đơn</a></li>
+                <li><a href="login.html" onclick="logout()"><i class="fas fa-sign-out-alt me-2"></i> Đăng xuất</a></li>
+            </ul>
+        </nav>
+
+        <!-- Page Content -->
+        <div id="content">
+            <header class="mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h2 class="animate-fade-in text-white mb-0">Chốt Điện Nước Hàng Loạt</h2>
+                    <button class="btn btn-success shadow-sm rounded-3" onclick="saveAllUtilities()" id="btnSaveTop">
+                        <i class="fas fa-save me-2"></i> Lưu dữ liệu
+                    </button>
+                </div>
+                
+                <!-- Thanh công cụ bộ lọc nâng cao -->
+                <div class="card animate-fade-in border-0 shadow-lg mb-0 overflow-hidden" style="border-radius: 12px;">
+                    <div class="px-3 py-3" style="background: linear-gradient(135deg, rgba(30,40,60,0.8), rgba(20,30,50,0.9)); border-bottom: 1px solid rgba(255,255,255,0.05);">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-tools text-info me-2" style="font-size: 0.75rem;"></i>
+                            <span class="text-secondary small fw-bold text-uppercase" style="letter-spacing: 1px; font-size: 0.7rem;">Cấu hình nhập liệu</span>
+                        </div>
+                        <div class="row g-3 align-items-end">
+                            <div class="col-md-4">
+                                <label class="form-label text-secondary small mb-1"><i class="fas fa-search me-1"></i>Tìm nhanh</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-dark border-secondary text-secondary"><i class="fas fa-search"></i></span>
+                                    <input type="text" class="form-control bg-dark text-white border-secondary rounded-end-3" id="searchInput" placeholder="Số phòng, tên khách..." onkeyup="filterUtilityTable()" style="border-color: rgba(255,255,255,0.1) !important;">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label text-secondary small mb-1"><i class="fas fa-building me-1"></i>Khu trọ</label>
+                                <select class="form-select bg-dark text-white border-secondary rounded-3" id="selectArea" onchange="loadUtilityTable()" style="border-color: rgba(255,255,255,0.1) !important;">
+                                    <option value="">Chọn khu trọ</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label text-secondary small mb-1"><i class="fas fa-calendar-check me-1"></i>Kỳ hóa đơn (Tháng/Năm)</label>
+                                <input type="month" class="form-control bg-dark text-white border-secondary rounded-3" id="billingMonth" style="border-color: rgba(255,255,255,0.1) !important;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <div class="alert alert-info bg-dark border-info text-info small animate-fade-in">
+                <i class="fas fa-info-circle me-2"></i>
+                Hệ thống sẽ tự động lấy chỉ số cuối của tháng trước làm chỉ số đầu của tháng này. Nếu không có hóa đơn cũ, chỉ số đầu sẽ mặc định là 0.
+            </div>
+
+            <div class="card animate-fade-in shadow-lg">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-dark table-hover mb-0" id="utilityTable">
+                            <thead>
+                                <tr>
+                                    <th>Phòng</th>
+                                    <th>Khách Thuê</th>
+                                    <th class="text-center text-info">Điện Cũ</th>
+                                    <th class="text-center text-info">Điện Mới</th>
+                                    <th class="text-center text-info">Sử dụng (kWh)</th>
+                                    <th class="text-center text-primary">Nước Cũ</th>
+                                    <th class="text-center text-primary">Nước Mới</th>
+                                    <th class="text-center text-primary">Sử dụng (m3)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td colspan="8" class="text-center py-5 text-muted">Vui lòng chọn khu trọ để bắt đầu</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-4 text-end">
+                <button class="btn btn-lg btn-success px-5 shadow" onclick="saveAllUtilities()" id="btnSave">
+                    <i class="fas fa-save me-2"></i> Lưu & Xuất Hóa Đơn Hàng Loạt
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Xác Nhận Chốt Điện Nước -->
+    <div class="modal fade" id="confirmBatchModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content bg-dark text-white border-warning shadow-lg">
+                <div class="modal-header border-warning bg-warning bg-opacity-10">
+                    <h6 class="modal-title text-warning fw-bold"><i class="fas fa-exclamation-triangle me-2"></i>XÁC NHẬN CHỐT ĐIỆN NƯỚC</h6>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="confirmBatchMessage" class="mb-0">Bạn có chắc chắn muốn chốt điện nước?</p>
+                </div>
+                <div class="modal-footer border-warning">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="button" class="btn btn-warning fw-bold" id="btnConfirmBatch">
+                        <i class="fas fa-check me-1"></i> Xác nhận & Xuất hóa đơn
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const API_URL = '/api';
+        
+        // Mặc định chọn tháng hiện tại
+        document.getElementById('billingMonth').value = new Date().toISOString().slice(0, 7);
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            if(!localStorage.getItem('user')) {
+                window.location.href = 'login.html';
+                return;
+            }
+            loadAreas();
+        });
+
+        async function loadAreas() {
+            const res = await fetch(`${API_URL}/khutro`);
+            const data = await res.json();
+            const select = document.getElementById('selectArea');
+            select.innerHTML += data.map(a => `<option value="${a.idKhuTro}">${a.TenKhuTro}</option>`).join('');
+        }
+
+        async function loadUtilityTable() {
+            const areaId = document.getElementById('selectArea').value;
+            // Xóa tìm kiếm cũ khi đổi khu
+            document.getElementById('searchInput').value = '';
+            if(!areaId) return;
+
+            const tbody = document.querySelector('#utilityTable tbody');
+            tbody.innerHTML = '<tr><td colspan="8" class="text-center py-5"><div class="spinner-border text-primary"></div></td></tr>';
+
+            const res = await fetch(`${API_URL}/utilities/area/${areaId}`);
+            const rooms = await res.json();
+
+            if(rooms.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" class="text-center py-5 text-warning">Khu trọ này hiện chưa có phòng nào đang thuê.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = rooms.map(p => `
+                <tr data-contract-id="${p.idHopDong}">
+                    <td class="fw-bold">${p.SoPhong}</td>
+                    <td class="small">${p.HoTen}</td>
+                    <td class="text-center">
+                        <input type="number" class="form-control form-control-sm input-utility val-dien-cu" value="${p.lastDienMoi || 0}" oninput="calcConsumption(this)">
+                    </td>
+                    <td class="text-center">
+                        <input type="number" class="form-control form-control-sm input-utility val-dien-moi" value="${p.lastDienMoi || 0}" oninput="calcConsumption(this)">
+                    </td>
+                    <td class="text-center consumption cons-dien">0</td>
+                    <td class="text-center">
+                        <input type="number" class="form-control form-control-sm input-utility val-nuoc-cu" value="${p.lastNuocMoi || 0}" oninput="calcConsumption(this)">
+                    </td>
+                    <td class="text-center">
+                        <input type="number" class="form-control form-control-sm input-utility val-nuoc-moi" value="${p.lastNuocMoi || 0}" oninput="calcConsumption(this)">
+                    </td>
+                    <td class="text-center consumption cons-nuoc">0</td>
+                </tr>
+            `).join('');
+            
+            // Tính toán ban đầu
+            document.querySelectorAll('tr[data-contract-id]').forEach(tr => {
+                calcConsumption(tr.querySelector('.val-dien-moi'));
+            });
+        }
+
+        function filterUtilityTable() {
+            const input = document.getElementById('searchInput').value.toUpperCase();
+            const rows = document.querySelectorAll('#utilityTable tbody tr');
+            
+            rows.forEach(row => {
+                const roomText = row.querySelector('td:nth-child(1)')?.innerText.toUpperCase() || '';
+                const tenantText = row.querySelector('td:nth-child(2)')?.innerText.toUpperCase() || '';
+                
+                if (roomText.indexOf(input) > -1 || tenantText.indexOf(input) > -1) {
+                    row.style.display = "";
+                } else {
+                    row.style.display = "none";
+                }
+            });
+        }
+
+        function calcConsumption(input) {
+            const tr = input.closest('tr');
+            const dCu = parseFloat(tr.querySelector('.val-dien-cu').value) || 0;
+            const dMoi = parseFloat(tr.querySelector('.val-dien-moi').value) || 0;
+            const nCu = parseFloat(tr.querySelector('.val-nuoc-cu').value) || 0;
+            const nMoi = parseFloat(tr.querySelector('.val-nuoc-moi').value) || 0;
+
+            const consDien = dMoi - dCu;
+            const consNuoc = nMoi - nCu;
+
+            tr.querySelector('.cons-dien').innerText = consDien >= 0 ? consDien : 'Lỗi';
+            tr.querySelector('.cons-nuoc').innerText = consNuoc >= 0 ? consNuoc : 'Lỗi';
+            
+            if(consDien < 0 || consNuoc < 0) {
+                tr.classList.add('bg-danger', 'bg-opacity-10');
+            } else {
+                tr.classList.remove('bg-danger', 'bg-opacity-10');
+            }
+        }
+
+        // Biến tạm lưu data chờ xác nhận
+        let pendingBatchData = null;
+
+        async function saveAllUtilities() {
+            console.log('=== saveAllUtilities() called ===');
+            try {
+                const list = [];
+                const rows = document.querySelectorAll('#utilityTable tbody tr[data-contract-id]');
+                let hasError = false;
+
+                rows.forEach(tr => {
+                    const dienCu = tr.querySelector('.val-dien-cu').value;
+                    const dienMoi = tr.querySelector('.val-dien-moi').value;
+                    const nuocCu = tr.querySelector('.val-nuoc-cu').value;
+                    const nuocMoi = tr.querySelector('.val-nuoc-moi').value;
+
+                    if(dienMoi - dienCu < 0 || nuocMoi - nuocCu < 0) hasError = true;
+
+                    list.push({
+                        idHopDong: tr.dataset.contractId,
+                        dienCu, dienMoi, nuocCu, nuocMoi
+                    });
+                });
+
+                if(list.length === 0) return alert('Không có dữ liệu để lưu!');
+                if(hasError) return alert('Vui lòng kiểm tra lại các chỉ số. Chỉ số mới không được nhỏ hơn chỉ số cũ!');
+
+                const month = document.getElementById('billingMonth').value;
+                const ngayLap = `${month}-01`;
+
+                // Lưu data tạm và hiện modal xác nhận
+                pendingBatchData = { list, ngayLap };
+                document.getElementById('confirmBatchMessage').innerHTML = `
+                    Xác nhận chốt điện nước cho <strong>${list.length} phòng</strong> vào kỳ <strong>${month}</strong>?<br>
+                    <small class="text-secondary">Hệ thống sẽ tự động tạo hóa đơn cho tất cả phòng.</small>
+                `;
+                const modal = new bootstrap.Modal(document.getElementById('confirmBatchModal'));
+                modal.show();
+            } catch (err) {
+                console.error('saveAllUtilities error:', err);
+                alert('Lỗi khi chuẩn bị dữ liệu: ' + err.message);
+            }
+        }
+
+        // Xử lý khi user bấm Xác nhận trên modal
+        document.getElementById('btnConfirmBatch').addEventListener('click', async function() {
+            if (!pendingBatchData) return;
+
+            // Đóng modal xác nhận
+            const confirmModal = bootstrap.Modal.getInstance(document.getElementById('confirmBatchModal'));
+            if (confirmModal) confirmModal.hide();
+
+            const btnSave = document.getElementById('btnSave');
+            const btnSaveTop = document.getElementById('btnSaveTop');
+            if (btnSave) { btnSave.disabled = true; btnSave.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Đang xử lý...'; }
+            if (btnSaveTop) { btnSaveTop.disabled = true; btnSaveTop.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Đang xử lý...'; }
+
+            try {
+                const res = await fetch(`${API_URL}/utilities/batch`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(pendingBatchData)
+                });
+
+                const result = await res.json();
+                console.log('Server response:', result);
+                alert(result.message);
+                if(res.ok) window.location.href = 'invoices.html';
+            } catch (err) {
+                console.error('Batch save error:', err);
+                alert('Lỗi khi lưu dữ liệu: ' + err.message);
+            } finally {
+                pendingBatchData = null;
+                if (btnSave) { btnSave.disabled = false; btnSave.innerHTML = '<i class="fas fa-save me-2"></i> Lưu & Xuất Hóa Đơn Hàng Loạt'; }
+                if (btnSaveTop) { btnSaveTop.disabled = false; btnSaveTop.innerHTML = '<i class="fas fa-save me-2"></i> Lưu dữ liệu'; }
+            }
+        });
+
+        function logout() { localStorage.removeItem('user'); window.location.href = 'login.html'; }
+    </script>
+</body>
+</html>

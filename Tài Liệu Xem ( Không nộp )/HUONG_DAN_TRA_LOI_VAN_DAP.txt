@@ -1,0 +1,67 @@
+================================================================================
+HƯỚNG DẪN TRẢ LỜI VẤN ĐÁP ĐỒ ÁN QUẢN LÝ PHÒNG TRỌ (DÀNH CHO SINH VIÊN)
+================================================================================
+
+Tài liệu này giúp bạn hiểu "bản chất" code đã viết để trả lời thầy cô khi bảo vệ đồ án.
+
+--------------------------------------------------------------------------------
+1. CÂU HỎI VỀ CẤU TRÚC THƯ MỤC
+--------------------------------------------------------------------------------
+Hỏi: "Dự án của em chia thư mục như thế nào? Tại sao phải chia như vậy?"
+Trả lời: "Dạ thưa thầy/cô, dự án em chia làm 2 phần chính theo mô hình Client-Server:
+- Thư mục 'public': Chứa toàn bộ giao diện (Frontend) mà người dùng thấy.
+- Thư mục 'server': Chứa mã nguồn xử lý (Backend) và kết nối Cơ sở dữ liệu.
+Cách chia này giúp quản lý code dễ dàng, tách biệt giữa giao diện và logic xử lý dữ liệu."
+
+--------------------------------------------------------------------------------
+2. CÂU HỎI VỀ LUỒNG DỮ LIỆU (QUAN TRỌNG NHẤT)
+--------------------------------------------------------------------------------
+Hỏi: "Khi em nhấn nút 'Lưu' để thêm một phòng mới, dữ liệu nó chạy như thế nào?"
+Trả lời: "Dạ, quy trình chạy qua 4 bước:
+Bước 1: JavaScript ở Frontend (file frontend.js) lấy dữ liệu từ các ô input.
+Bước 2: Nó dùng lệnh 'fetch' để gửi dữ liệu đó lên Server qua một đường dẫn API (ví dụ /api/phong).
+Bước 3: Tại Server (file server.js), Node.js nhận dữ liệu và thực hiện câu lệnh SQL 'INSERT INTO...' để lưu vào máy chủ MySQL.
+Bước 4: Sau khi lưu xong, MySQL trả về thông báo thành công. Server gửi phản hồi về cho trình duyệt để hiện thông báo 'Thêm thành công' cho người dùng."
+
+--------------------------------------------------------------------------------
+3. CÂU HỎI VỀ DATABASE (MYSQL)
+--------------------------------------------------------------------------------
+Hỏi: "Làm sao em biết được phòng nào đang Trống, phòng nào Đã thuê?"
+Trả lời: "Dạ, em dựa vào sự tồn tại của Hợp đồng. Em dùng câu lệnh SQL JOIN (Liên kết bảng) giữa bảng 'Phong' và bảng 'HopDong'. Nếu một ID phòng không nằm trong bảng 'HopDong', thì phòng đó là phòng trống."
+
+Hỏi: "Khóa ngoại (Foreign Key) trong bài của em dùng để làm gì?"
+Trả lời: "Dạ, khóa ngoại giúp đảm bảo tính toàn vẹn dữ liệu. Ví dụ: Em không thể xóa một 'Khu trọ' nếu khu đó vẫn đang chứa 'Phòng'. Hệ thống sẽ báo lỗi để bảo vệ dữ liệu không bị mồ côi."
+
+--------------------------------------------------------------------------------
+4. CÂU HỎI VỀ BACKEND (NODE.JS & EXPRESS)
+--------------------------------------------------------------------------------
+Hỏi: "Middleware 'express.json()' dùng để làm gì?" (Dòng 9 trong server.js)
+Trả lời: "Dạ, nó giúp Server hiểu được dữ liệu định dạng JSON mà phía Frontend gửi lên. Nếu không có nó, Server sẽ không đọc được dữ liệu từ các ô nhập liệu."
+
+Hỏi: "Tại sao em dùng phương thức POST cho Thêm mới mà dùng PUT cho Cập nhật (Sửa)?"
+Trả lời: "Dạ đây là quy chuẩn của thiết kế API (RESTful API). POST dùng để tạo mới dữ liệu, còn PUT dùng để ghi đè/cập nhật dữ liệu đã có."
+
+--------------------------------------------------------------------------------
+5. CÂU HỎI VỀ FRONTEND (GIAO DIỆN)
+--------------------------------------------------------------------------------
+Hỏi: "Hiệu ứng Glassmorphism (kính mờ) trong bài em làm như thế nào?"
+Trả lời: "Dạ, em sử dụng thuộc tính CSS 'backdrop-filter: blur()' kết hợp với màu nền có độ trong suốt (RGBA) để tạo cảm giác giao diện hiện đại và có chiều sâu."
+
+Hỏi: "Làm sao em hiển thị dữ liệu ra bảng mà không cần tải lại trang (F5)?"
+Trả lời: "Dạ, em dùng Fetch API để lấy dữ liệu dạng JSON từ server, sau đó dùng JavaScript chạy vòng lặp '.map()' để tạo ra các thẻ <tr> <td> và nhét vào thân bảng (tbody) bằng thuộc tính 'innerHTML'."
+
+--------------------------------------------------------------------------------
+6. CÁC TÌNH HUỐNG "BẪY" THƯỜNG GẶP
+--------------------------------------------------------------------------------
+Bẫy 1: "Nếu thầy muốn đổi địa chỉ Server sang cổng 4000 thay vì 3000 thì sửa ở đâu?"
+Trả lời: "Dạ, sửa ở biến 'const PORT = 3000' trong file 'server/server.js' ạ."
+
+Bẫy 2: "Mật khẩu của người dùng em đang lưu như thế nào? Có an toàn không?"
+Trả lời: "Dạ hiện tại em đang lưu dạng văn bản thuần (plain text) để dễ kiểm tra trong quá trình làm đồ án cơ sở. Hướng phát triển tiếp theo em sẽ dùng thư viện 'bcrypt' để mã hóa mật khẩu trước khi lưu vào DB để đảm bảo an toàn tuyệt đối."
+
+--------------------------------------------------------------------------------
+LỜI KHUYÊN KHI TRẢ LỜI:
+- Luôn bắt đầu bằng "Dạ thưa thầy/cô...".
+- Trả lời tự tin, nếu không biết rõ thì hãy nói: "Dạ phần này em có tìm hiểu nhưng chưa đào sâu, em sẽ bổ sung kiến thức này ạ".
+- Nên mở sẵn code trên màn hình, khi trả lời đến đâu thì trỏ chuột vào dòng code đó đến đấy.
+================================================================================

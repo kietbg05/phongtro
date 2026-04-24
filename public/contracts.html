@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hợp Đồng | Hệ Thống Quản Lý Phòng Trọ</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Flatpickr -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <div class="wrapper d-flex">
+        <!-- Sidebar -->
+        <nav id="sidebar">
+            <div class="sidebar-header">
+                <i class="fas fa-home-user me-2"></i> QUẢN LÝ PHÒNG
+            </div>
+            <ul class="list-unstyled components">
+                <li><a href="index.html"><i class="fas fa-tachometer-alt me-2"></i> Tổng quan</a></li>
+                <li><a href="areas.html"><i class="fas fa-building me-2"></i> Khu trọ</a></li>
+                <li><a href="rooms.html"><i class="fas fa-door-open me-2"></i> Phòng trọ</a></li>
+                <li><a href="utilities.html"><i class="fas fa-bolt me-2"></i> Chốt điện nước</a></li>
+                <li><a href="tenants.html"><i class="fas fa-users me-2"></i> Khách thuê</a></li>
+                <li><a href="services.html"><i class="fas fa-concierge-bell me-2"></i> Dịch vụ/Phí</a></li>
+                <li class="active"><a href="contracts.html"><i class="fas fa-file-contract me-2"></i> Hợp đồng</a></li>
+                <li><a href="invoices.html"><i class="fas fa-file-invoice-dollar me-2"></i> Hóa đơn</a></li>
+                <li><a href="login.html" onclick="logout()"><i class="fas fa-sign-out-alt me-2"></i> Đăng xuất</a></li>
+            </ul>
+        </nav>
+
+        <!-- Page Content -->
+        <div id="content">
+            <header class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="animate-fade-in">Quản Lý Hợp Đồng</h2>
+                <div class="d-flex gap-3">
+                    <div class="input-group" style="width: 300px;">
+                        <span class="input-group-text bg-dark border-secondary text-secondary"><i class="fas fa-search"></i></span>
+                        <input type="text" class="form-control bg-dark text-white border-secondary" id="searchContract" placeholder="Tìm tên khách, số phòng..." onkeyup="filterContracts()">
+                    </div>
+                    <button class="btn btn-primary" onclick="openAddContractModal()">
+                        <i class="fas fa-plus me-2"></i> Lập Hợp Đồng Mới
+                    </button>
+                </div>
+            </header>
+
+            <div class="card animate-fade-in">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0" id="contractTable">
+                            <thead>
+                                <tr>
+                                    <th>Khách Thuê</th>
+                                    <th>Số Phòng</th>
+                                    <th>Ngày Ký</th>
+                                    <th>Ngày Hết Hạn</th>
+                                    <th>Tiền Cọc</th>
+                                    <th>Trạng Thái</th>
+                                    <th>Hành Động</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Lập Hợp Đồng -->
+    <div class="modal fade" id="addContractModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content bg-dark text-white border-secondary">
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title">Lập Hợp Đồng Thuê Phòng</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="contractForm">
+                        <input type="hidden" id="editContractId">
+                        <div class="mb-3">
+                            <label class="form-label">Chọn Khách Thuê</label>
+                            <select class="form-select bg-dark text-white border-secondary" id="selectTenant" required></select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Chọn Phòng Trống</label>
+                            <select class="form-select bg-dark text-white border-secondary" id="selectRoom" required></select>
+                        </div>
+                        <div class="row">
+                            <div class="col-6 mb-3">
+                                <label class="form-label">Ngày Ký</label>
+                                <input type="text" class="form-control bg-dark text-white border-secondary datepicker" id="startDate" placeholder="dd/mm/yyyy" required>
+                            </div>
+                            <div class="col-6 mb-3">
+                                <label class="form-label">Ngày Hết Hạn</label>
+                                <input type="text" class="form-control bg-dark text-white border-secondary datepicker" id="endDate" placeholder="dd/mm/yyyy" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Tiền Cọc (đ)</label>
+                            <input type="number" class="form-control bg-dark text-white border-secondary" id="contractDeposit" placeholder="Nhập số tiền cọc" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="button" class="btn btn-primary" id="btnSubmitContract" onclick="submitContract()">Xác Nhận Thuê</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Flatpickr -->
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/vn.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/confirm-modal.js"></script>
+    <script>
+        const API_URL = '/api';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchContracts();
+            loadDropdowns();
+            
+            flatpickr(".datepicker", {
+                allowInput: true,
+                dateFormat: "d/m/Y",
+                locale: "vn",
+                monthSelectorType: "dropdown"
+            });
+        });
+
+        function openAddContractModal() {
+            document.getElementById('editContractId').value = '';
+            document.getElementById('contractForm').reset();
+            document.getElementById('selectTenant').disabled = false;
+            document.getElementById('selectRoom').disabled = false;
+            document.querySelector('#addContractModal .modal-title').innerText = 'Lập Hợp Đồng Mới';
+            document.getElementById('btnSubmitContract').innerText = 'Xác Nhận Thuê';
+            
+            // Set default dates with Flatpickr (dd/mm/yyyy)
+            const today = new Date();
+            const next6Months = new Date();
+            next6Months.setMonth(today.getMonth() + 6);
+            
+            const formatDate = (date) => {
+                const d = date.getDate().toString().padStart(2, '0');
+                const m = (date.getMonth() + 1).toString().padStart(2, '0');
+                const y = date.getFullYear();
+                return `${d}/${m}/${y}`;
+            };
+
+            document.getElementById('startDate')._flatpickr.setDate(formatDate(today));
+            document.getElementById('endDate')._flatpickr.setDate(formatDate(next6Months));
+            document.getElementById('contractDeposit').value = '';
+
+            loadDropdowns(); 
+            const modal = new bootstrap.Modal(document.getElementById('addContractModal'));
+            modal.show();
+        }
+
+        let allContracts = [];
+        async function fetchContracts() {
+            try {
+                const res = await fetch(`${API_URL}/hopdong`);
+                if (!res.ok) throw new Error('Lỗi tải danh sách hợp đồng');
+                allContracts = await res.json();
+                renderContractTable(allContracts);
+            } catch (error) { console.error(error); }
+        }
+
+        function renderContractTable(data) {
+            const tbody = document.querySelector('#contractTable tbody');
+            tbody.innerHTML = data.map((c, index) => `
+                <tr>
+                    <td class="fw-bold">${c.HoTen}</td>
+                    <td>${c.SoPhong}</td>
+                    <td>${new Date(c.ngayKy).toLocaleDateString('vi-VN')}</td>
+                    <td>${new Date(c.ngayHetHan).toLocaleDateString('vi-VN')}</td>
+                    <td>${new Intl.NumberFormat('vi-VN').format(c.tienCoc || 0)} đ</td>
+                    <td><span class="badge bg-success">Hiệu lực</span></td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-info" onclick="printContractByIndex(${index})" title="In trích lục hợp đồng"><i class="fas fa-print"></i></button>
+                        <button class="btn btn-sm btn-outline-warning" onclick="openEditContractByIndex(${index})" title="Sửa hợp đồng"><i class="fas fa-edit"></i></button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteContract(${c.idHopDong})" title="Hủy hợp đồng"><i class="fas fa-trash"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function filterContracts() {
+            const val = document.getElementById('searchContract').value.toLowerCase();
+            const filtered = allContracts.filter(c => 
+                c.HoTen.toLowerCase().includes(val) || 
+                c.SoPhong.toLowerCase().includes(val)
+            );
+            renderContractTable(filtered);
+        }
+
+        function printContractByIndex(index) {
+            const c = allContracts[index];
+            if (!c) return;
+            
+            const printWindow = window.open('', '_blank');
+            const ngayKy = new Date(c.ngayKy).toLocaleDateString('vi-VN');
+            const ngayHet = new Date(c.ngayHetHan).toLocaleDateString('vi-VN');
+            
+            printWindow.document.write(`
+                <html>
+                <head>
+                    <title>Trích lục Hợp đồng - ${c.HoTen}</title>
+                    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+                    <style>
+                        body { font-family: 'Times New Roman', serif; padding: 50px; line-height: 1.6; }
+                        .contract-box { border: 1px solid #000; padding: 40px; max-width: 850px; margin: auto; }
+                        .header { text-align: center; margin-bottom: 30px; }
+                        .section-title { font-weight: bold; text-decoration: underline; margin-top: 20px; }
+                        .footer { margin-top: 50px; display: flex; justify-content: space-between; text-align: center; }
+                        @media print { .no-print { display: none; } }
+                    </style>
+                </head>
+                <body>
+                    <div class="contract-box">
+                        <div class="header">
+                            <h4>CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</h4>
+                            <h6>Độc lập - Tự do - Hạnh phúc</h6>
+                            <hr>
+                            <h3 class="fw-bold mt-4">HỢP ĐỒNG THUÊ PHÒNG TRỌ</h3>
+                            <p>Số: ${c.idHopDong}/HĐT-2026</p>
+                        </div>
+
+                        <p>Hôm nay, ngày ${new Date().toLocaleDateString('vi-VN')}, chúng tôi gồm có:</p>
+                        
+                        <p class="section-title">BÊN CHO THUÊ (BÊN A):</p>
+                        <p>Đại diện: <strong>BAN QUẢN LÝ PHÒNG TRỌ</strong></p>
+                        <p>Địa chỉ: ${c.TenKhuTro || 'Khu vực quản lý'}</p>
+
+                        <p class="section-title">BÊN THUÊ (BÊN B):</p>
+                        <p>Ông/Bà: <strong>${c.HoTen}</strong> &nbsp; | &nbsp; Giới tính: <strong>${c.GioiTinh || 'Nam'}</strong></p>
+                        <p>Số CCCD: ${c.CCCD || '....................'} &nbsp; | &nbsp; SĐT: ${c.SoDT}</p>
+                        <p>Quê quán: ${c.QueQuan || '....................'} &nbsp; | &nbsp; Quốc tịch: ${c.QuocTich || 'Việt Nam'}</p>
+
+                        <p class="section-title">NỘI DUNG THỎA THUẬN:</p>
+                        <p>- Bên A đồng ý cho bên B thuê phòng số: <strong>${c.SoPhong}</strong></p>
+                        <p>- Thời hạn thuê: Từ ngày <strong>${ngayKy}</strong> đến hết ngày <strong>${ngayHet}</strong></p>
+                        <p>- Giá thuê phòng: <strong>${new Intl.NumberFormat('vi-VN').format(c.giaThue || 0)} đ/tháng</strong></p>
+                        <p>- Tiền đặt cọc: <strong>${new Intl.NumberFormat('vi-VN').format(c.tienCoc || 0)} đ</strong></p>
+
+                        <p class="mt-4"><i>Hợp đồng được lập thành 02 bản có giá trị pháp lý như nhau. Hai bên cam kết thực hiện đúng các điều khoản đã thỏa thuận.</i></p>
+
+                        <div class="footer">
+                            <div>
+                                <p class="fw-bold">BÊN THUÊ (BÊN B)</p>
+                                <p class="small">(Ký và ghi rõ họ tên)</p>
+                            </div>
+                            <div>
+                                <p class="fw-bold">ĐẠI DIỆN BÊN A</p>
+                                <p class="small">(Ký và ghi rõ họ tên)</p>
+                            </div>
+                        </div>
+
+                        <div class="mt-5 text-center no-print">
+                            <button onclick="window.print()" class="btn btn-primary">IN HỢP ĐỒNG</button>
+                            <button onclick="window.close()" class="btn btn-secondary">Đóng</button>
+                        </div>
+                    </div>
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+        }
+
+        async function openEditContractByIndex(index) {
+            const c = allContracts[index];
+            if (!c) return;
+
+            document.getElementById('editContractId').value = c.idHopDong;
+            
+            // Đối với Edit, ta cần thêm khách và phòng hiện tại vào dropdown nếu chưa có
+            const ntDropdown = document.getElementById('selectTenant');
+            const pDropdown = document.getElementById('selectRoom');
+            
+            ntDropdown.innerHTML = `<option value="${c.idNguoiThue}">${c.HoTen} - ${c.SoDT}</option>`;
+            pDropdown.innerHTML = `<option value="${c.idPhong}">${c.SoPhong} (${c.TenKhuTro})</option>`;
+            
+            document.getElementById('selectTenant').disabled = true;
+            document.getElementById('selectRoom').disabled = true;
+
+            const dk = new Date(c.ngayKy);
+            const dh = new Date(c.ngayHetHan);
+            
+            const formatDate = (date) => {
+                const d = date.getDate().toString().padStart(2, '0');
+                const m = (date.getMonth() + 1).toString().padStart(2, '0');
+                const y = date.getFullYear();
+                return `${d}/${m}/${y}`;
+            };
+
+            document.getElementById('startDate')._flatpickr.setDate(formatDate(dk));
+            document.getElementById('endDate')._flatpickr.setDate(formatDate(dh));
+            document.getElementById('contractDeposit').value = c.tienCoc;
+
+            document.querySelector('#addContractModal .modal-title').innerText = 'Chỉnh Sửa Hợp Đồng';
+            document.getElementById('btnSubmitContract').innerText = 'Cập Nhật Hợp Đồng';
+            const modal = new bootstrap.Modal(document.getElementById('addContractModal'));
+            modal.show();
+        }
+
+        async function loadDropdowns() {
+            try {
+                const resNT = await fetch(`${API_URL}/nguoithue/chua-thue`);
+                const tenants = await resNT.json();
+                const ntDropdown = document.getElementById('selectTenant');
+                if (tenants.length === 0) {
+                    ntDropdown.innerHTML = '<option value="">--- Tất cả khách đã có phòng ---</option>';
+                } else {
+                    ntDropdown.innerHTML = '<option value="">-- Chọn khách thuê --</option>' + tenants.map(t => 
+                        `<option value="${t.idNguoiThue}">${t.HoTen} - ${t.SoDT}</option>`
+                    ).join('');
+                }
+
+                const resP = await fetch(`${API_URL}/phong/trong`);
+                const rooms = await resP.json();
+                const pDropdown = document.getElementById('selectRoom');
+                if (rooms.length === 0) {
+                    pDropdown.innerHTML = '<option value="">--- Hết phòng trống ---</option>';
+                } else {
+                    pDropdown.innerHTML = '<option value="">-- Chọn phòng trống --</option>' + rooms.map(p => 
+                        `<option value="${p.idPhong}">${p.SoPhong} (${p.TenKhuTro})</option>`
+                    ).join('');
+                }
+            } catch (error) { console.error(error); }
+        }
+
+        async function submitContract() {
+            const editId = document.getElementById('editContractId').value;
+            const parseDate = (str) => {
+                if (!str) return '';
+                const parts = str.split('/');
+                if (parts.length === 3) return `${parts[2]}-${parts[1]}-${parts[0]}`;
+                return str;
+            };
+
+            const data = {
+                idNguoiThue: document.getElementById('selectTenant').value,
+                idPhong: document.getElementById('selectRoom').value,
+                ngayKy: parseDate(document.getElementById('startDate').value),
+                ngayHetHan: parseDate(document.getElementById('endDate').value),
+                tienCoc: document.getElementById('contractDeposit').value
+            };
+
+            if (!data.idNguoiThue || !data.idPhong || !data.ngayKy || !data.ngayHetHan || !data.tienCoc) {
+                alert('Vui lòng điền đầy đủ thông tin hợp đồng!');
+                return;
+            }
+
+            try {
+                const url = editId ? `${API_URL}/hopdong/${editId}` : `${API_URL}/hopdong`;
+                const method = editId ? 'PUT' : 'POST';
+                const res = await fetch(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const result = await res.json();
+                if (res.ok) { 
+                    alert(editId ? 'Cập nhật thành công!' : 'Lập hợp đồng thành công!'); 
+                    location.reload(); 
+                } else {
+                    alert('Lỗi: ' + (result.error || 'Không thể lưu.'));
+                }
+            } catch (error) { alert('Lỗi kết nối máy chủ!'); }
+        }
+
+        async function deleteContract(id) {
+            showConfirm('Bạn có muốn hủy/xóa hợp đồng này?', async () => {
+                const res = await fetch(`${API_URL}/hopdong/${id}`, { method: 'DELETE' });
+                if(res.ok) location.reload();
+            });
+        }
+
+        function logout() { localStorage.removeItem('user'); window.location.href = 'login.html'; }
+    </script>
+</body>
+</html>

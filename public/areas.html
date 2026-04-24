@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Khu Trọ | Hệ Thống Quản Lý Phòng Trọ</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .area-card {
+            border-left: 5px solid var(--primary-color);
+            transition: 0.3s;
+            cursor: pointer;
+        }
+        .area-card:hover {
+            transform: scale(1.02);
+            background: rgba(255, 255, 255, 0.05);
+        }
+        .area-icon {
+            font-size: 2.5rem;
+            opacity: 0.2;
+            position: absolute;
+            right: 15px;
+            bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="wrapper d-flex">
+        <!-- Sidebar -->
+        <nav id="sidebar">
+            <div class="sidebar-header">
+                <i class="fas fa-home-user me-2"></i> QUẢN LÝ PHÒNG
+            </div>
+            <ul class="list-unstyled components">
+                <li><a href="index.html"><i class="fas fa-tachometer-alt me-2"></i> Tổng quan</a></li>
+                <li class="active"><a href="areas.html"><i class="fas fa-building me-2"></i> Khu trọ</a></li>
+                <li><a href="rooms.html"><i class="fas fa-door-open me-2"></i> Phòng trọ</a></li>
+                <li><a href="utilities.html"><i class="fas fa-bolt me-2"></i> Chốt điện nước</a></li>
+                <li><a href="tenants.html"><i class="fas fa-users me-2"></i> Khách thuê</a></li>
+                <li><a href="services.html"><i class="fas fa-concierge-bell me-2"></i> Dịch vụ/Phí</a></li>
+                <li><a href="contracts.html"><i class="fas fa-file-contract me-2"></i> Hợp đồng</a></li>
+                <li><a href="invoices.html"><i class="fas fa-file-invoice-dollar me-2"></i> Hóa đơn</a></li>
+                <li><a href="login.html" onclick="logout()"><i class="fas fa-sign-out-alt me-2"></i> Đăng xuất</a></li>
+            </ul>
+        </nav>
+
+        <!-- Page Content -->
+        <div id="content">
+            <header class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="animate-fade-in">Danh Sách Khu Trọ</h2>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addAreaModal">
+                    <i class="fas fa-plus me-2"></i> Thêm Khu Trọ Mới
+                </button>
+            </header>
+
+            <!-- Card Grid -->
+            <div class="row" id="areaGrid">
+                <!-- Dữ liệu sẽ đổ vào đây -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Thêm Khu Trọ -->
+    <div class="modal fade" id="addAreaModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content bg-dark text-white border-secondary">
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title">Cấu Hình Khu Trọ</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="areaForm">
+                        <input type="hidden" id="editAreaId">
+                        <div class="mb-3">
+                            <label class="form-label">Tên Khu Trọ</label>
+                            <input type="text" class="form-control bg-dark text-white border-secondary" id="areaName" placeholder="VD: Khu A, Nhà Trọ Hutech..." required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Địa Chỉ</label>
+                            <input type="text" class="form-control bg-dark text-white border-secondary" id="areaAddress" placeholder="Số nhà, tên đường..." required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="button" class="btn btn-primary" onclick="submitArea()">Lưu Khu Trọ</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Xem Chi Tiết Khu Trọ -->
+    <div class="modal fade" id="areaDetailModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content bg-dark text-white border-secondary">
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title"><i class="fas fa-building me-2"></i> CHI TIẾT KHU TRỌ</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="areaDetailContent">
+                    <!-- Nội dung JS -->
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Quản lý Phòng (Dùng bên trong Khu trọ) -->
+    <div class="modal fade" id="manageRoomModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content bg-dark text-white border-secondary shadow-lg">
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title fw-bold text-info"><i class="fas fa-door-open me-2"></i>Quản Lý Phòng</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="manageRoomForm">
+                        <input type="hidden" id="editRoomIdInside">
+                        <input type="hidden" id="roomAreaIdInside">
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label small text-secondary">Số Phòng</label>
+                                <input type="text" class="form-control bg-dark text-white border-secondary" id="roomNumberInside" placeholder="VD: P101" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label small text-secondary">Loại Phòng</label>
+                                <input type="text" class="form-control bg-dark text-white border-secondary" id="roomTypeInside" placeholder="VD: Thường, VIP" required>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label small text-secondary">Giá Thuê (đ)</label>
+                                <input type="number" class="form-control bg-dark text-white border-secondary" id="roomPriceInside" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label small text-secondary">Diện tích (m2)</label>
+                                <input type="number" class="form-control bg-dark text-white border-secondary" id="roomAreaSizeInside" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small text-secondary">Nội thất (Mô tả chi tiết)</label>
+                            <textarea class="form-control bg-dark text-white border-secondary" id="roomFurnitureInside" rows="3" placeholder="VD: Giường, Tủ, Máy lạnh..."></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Đóng</button>
+                    <button type="button" class="btn btn-primary btn-sm px-4" onclick="submitManageRoom()">Lưu Thông Tin</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/confirm-modal.js"></script>
+    <script>
+        const API_URL = '/api';
+
+        document.addEventListener('DOMContentLoaded', fetchAreas);
+
+        async function fetchAreas() {
+            try {
+                const response = await fetch(`${API_URL}/khutro/stats`);
+                if (!response.ok) throw new Error('Lỗi tải danh sách');
+                const areas = await response.json();
+                const areaContainer = document.getElementById('areaGrid');
+                areaContainer.innerHTML = areas.map(a => `
+                <div class="col-md-6 col-lg-4">
+                    <div class="card area-card animate-fade-in">
+                        <div class="card-body">
+                            <h4 class="card-title text-white mb-1">${a.TenKhuTro}</h4>
+                            <p class="text-secondary small mb-3"><i class="fas fa-map-marker-alt text-danger me-2"></i>${a.DiaChi}</p>
+                            
+                            <div class="d-flex gap-2 mb-4">
+                                <span class="badge bg-primary">${a.tongPhong || 0} Phòng</span>
+                                <span class="badge bg-success">${a.dangThue || 0} Đang ở</span>
+                            </div>
+
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-sm btn-info" onclick="viewAreaDetail(${a.idKhuTro})"><i class="fas fa-eye"></i></button>
+                                <button class="btn btn-sm btn-outline-warning" onclick='openEditAreaModal(${JSON.stringify(a).replace(/'/g, "&apos;")})'><i class="fas fa-edit"></i> Sửa</button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="deleteArea(${a.idKhuTro})"><i class="fas fa-trash"></i> Xóa</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        } catch (error) { 
+            console.error('Lỗi tải danh sách khu:', error);
+            alert('Không thể kết nối đến máy chủ!');
+        }
+    }
+
+        async function viewAreaDetail(id) {
+            try {
+                const res = await fetch(`${API_URL}/khutro/${id}/details`);
+                if (!res.ok) throw new Error('Lỗi tải chi tiết');
+                const area = await res.json();
+                
+                const content = `
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div>
+                            <h4 class="text-info mb-0">${area.TenKhuTro}</h4>
+                            <p class="text-secondary small mb-0"><i class="fas fa-map-marker-alt me-2"></i>${area.DiaChi}</p>
+                        </div>
+                        <button class="btn btn-success btn-sm" onclick="addNewRoomInArea(${id})">
+                            <i class="fas fa-plus me-1"></i> Thêm Phòng
+                        </button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-dark table-hover table-sm">
+                            <thead class="table-secondary text-dark">
+                                <tr>
+                                    <th>Số Phòng</th>
+                                    <th>Loại Phòng</th>
+                                    <th>Giá Thuê</th>
+                                    <th>Trạng Thái</th>
+                                    <th class="text-center">Thao Tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${area.phong.length > 0 ? area.phong.map(p => `
+                                    <tr>
+                                        <td class="fw-bold align-middle">${p.SoPhong}</td>
+                                        <td class="align-middle">${p.loaiPhong}</td>
+                                        <td class="align-middle">${new Intl.NumberFormat('vi-VN').format(p.giaThue)} đ</td>
+                                        <td class="align-middle">
+                                            <span class="badge ${p.idHopDong ? 'bg-success' : 'bg-warning text-dark'}">
+                                                ${p.idHopDong ? 'Đang thuê' : 'Trống'}
+                                            </span>
+                                        </td>
+                                        <td class="text-center">
+                                            <button class="btn btn-xs btn-outline-info me-1" title="Sửa" onclick="editRoomFromArea('${id}', ${JSON.stringify(p).replace(/'/g, "&apos;")})">
+                                                <i class="fas fa-edit fa-xs" style="pointer-events:none"></i>
+                                            </button>
+                                            <button class="btn btn-xs btn-outline-danger" title="Xóa" onclick="deleteRoomFromArea('${id}', ${p.idPhong})">
+                                                <i class="fas fa-trash fa-xs" style="pointer-events:none"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                `).join('') : '<tr><td colspan="5" class="text-center">Khu trọ này chưa có phòng nào.</td></tr>'}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+                document.getElementById('areaDetailContent').innerHTML = content;
+                const modal = new bootstrap.Modal(document.getElementById('areaDetailModal'));
+                modal.show();
+            } catch (error) { alert('Lỗi tải chi tiết khu trọ!'); }
+        }
+
+        function openEditAreaModal(area) {
+            document.getElementById('editAreaId').value = area.idKhuTro;
+            document.getElementById('areaName').value = area.TenKhuTro;
+            document.getElementById('areaAddress').value = area.DiaChi;
+            const modal = new bootstrap.Modal(document.getElementById('addAreaModal'));
+            modal.show();
+        }
+
+        async function submitArea() {
+            const editId = document.getElementById('editAreaId').value;
+            const data = {
+                TenKhuTro: document.getElementById('areaName').value,
+                DiaChi: document.getElementById('areaAddress').value
+            };
+            
+            if (!data.TenKhuTro || !data.DiaChi) {
+                alert('Vui lòng điền đầy đủ thông tin!');
+                return;
+            }
+
+            const url = editId ? `${API_URL}/khutro/${editId}` : `${API_URL}/khutro`;
+            const method = editId ? 'PUT' : 'POST';
+
+            try {
+                const res = await fetch(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const result = await res.json();
+                if (res.ok) { 
+                    alert(editId ? 'Cập nhật khu trọ thành công!' : 'Thêm khu trọ thành công!'); 
+                    location.reload(); 
+                } else {
+                    alert('Lỗi: ' + (result.error || 'Không thể lưu khu trọ.'));
+                }
+            } catch (error) {
+                alert('Lỗi kết nối máy chủ!');
+            }
+        }
+
+        async function deleteArea(id) {
+            if (!id) return;
+            showConfirm('Xác nhận xóa khu trọ này? Tất cả phòng thuộc khu này cũng sẽ bị xóa.', async () => {
+                try {
+                    const res = await fetch(`${API_URL}/khutro/${id}`, { method: 'DELETE' });
+                    const result = await res.json();
+                    if(res.ok) {
+                        alert('Đã xóa khu trọ thành công.');
+                        location.reload();
+                    } else {
+                        alert(result.error || 'Lỗi: Không thể xóa khu trọ.');
+                    }
+                } catch (err) {
+                    alert('Lỗi kết nối máy chủ!');
+                }
+            });
+        }
+
+        // --- Room Management within Area ---
+        function addNewRoomInArea(areaId) {
+            const detailModal = bootstrap.Modal.getInstance(document.getElementById('areaDetailModal'));
+            if(detailModal) detailModal.hide();
+            
+            document.getElementById('roomAreaIdInside').value = areaId;
+            document.getElementById('editRoomIdInside').value = "";
+            document.getElementById('roomNumberInside').value = "";
+            document.getElementById('roomTypeInside').value = "";
+            document.getElementById('roomPriceInside').value = "";
+            document.getElementById('roomAreaSizeInside').value = "";
+            document.getElementById('roomFurnitureInside').value = "";
+            
+            const roomModal = new bootstrap.Modal(document.getElementById('manageRoomModal'));
+            roomModal.show();
+        }
+
+        function editRoomFromArea(areaId, p) {
+            const detailModal = bootstrap.Modal.getInstance(document.getElementById('areaDetailModal'));
+            if(detailModal) detailModal.hide();
+
+            document.getElementById('roomAreaIdInside').value = areaId;
+            document.getElementById('editRoomIdInside').value = p.idPhong;
+            document.getElementById('roomNumberInside').value = p.SoPhong;
+            document.getElementById('roomTypeInside').value = p.loaiPhong;
+            document.getElementById('roomPriceInside').value = p.giaThue;
+            document.getElementById('roomAreaSizeInside').value = p.dienTich || "";
+            document.getElementById('roomFurnitureInside').value = p.noiThat || "";
+
+            const roomModal = new bootstrap.Modal(document.getElementById('manageRoomModal'));
+            roomModal.show();
+        }
+
+        async function submitManageRoom() {
+            const editId = document.getElementById('editRoomIdInside').value;
+            const areaId = document.getElementById('roomAreaIdInside').value;
+            const data = {
+                SoPhong: document.getElementById('roomNumberInside').value,
+                idKhuTro: areaId,
+                loaiPhong: document.getElementById('roomTypeInside').value,
+                giaThue: document.getElementById('roomPriceInside').value,
+                dienTich: document.getElementById('roomAreaSizeInside').value,
+                noiThat: document.getElementById('roomFurnitureInside').value
+            };
+
+            if (!data.SoPhong || !data.giaThue) {
+                alert('Vui lòng điền các thông tin bắt buộc!');
+                return;
+            }
+
+            const url = editId ? `${API_URL}/phong/${editId}` : `${API_URL}/phong`;
+            const method = editId ? 'PUT' : 'POST';
+
+            try {
+                const res = await fetch(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const result = await res.json();
+                if (res.ok) {
+                    alert('Lưu thông tin phòng thành công!');
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('manageRoomModal'));
+                    modal.hide();
+                    viewAreaDetail(areaId); // Reload details modal
+                    fetchAreas(); // Sync main grid
+                } else {
+                    alert(result.error || 'Lỗi lưu phòng');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Có lỗi xảy ra kết nối máy chủ');
+            }
+        }
+
+        async function deleteRoomFromArea(areaId, roomId) {
+            showConfirm('Xác nhận xóa phòng này?', async () => {
+                try {
+                    const res = await fetch(`${API_URL}/phong/${roomId}`, { method: 'DELETE' });
+                    if(res.ok) {
+                        viewAreaDetail(areaId);
+                        fetchAreas();
+                    } else {
+                        const result = await res.json();
+                        alert(result.error || 'Không thể xóa phòng');
+                    }
+                } catch (err) {
+                    alert('Lỗi hệ thống');
+                }
+            });
+        }
+
+        function logout() { localStorage.removeItem('user'); window.location.href = 'login.html'; }
+    </script>
+</body>
+</html>

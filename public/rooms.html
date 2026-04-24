@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | Hệ Thống Quản Lý Phòng Trọ</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <!-- Flatpickr -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        /* Nâng cấp độ sáng cho Placeholder */
+        input::placeholder, textarea::placeholder {
+            color: rgba(255, 255, 255, 0.45) !important;
+        }
+
+        /* Nút Hủy Bỏ Hiện Đại */
+        .btn-cancel {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: rgba(255, 255, 255, 0.6) !important;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            padding: 5px 15px;
+            border-radius: 8px;
+        }
+        .btn-cancel:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.3);
+            color: #fff !important;
+            transform: translateY(-1px);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="wrapper d-flex">
+        <!-- Sidebar -->
+        <nav id="sidebar">
+            <div class="sidebar-header">
+                <i class="fas fa-home-user me-2"></i> QUẢN LÝ PHÒNG
+            </div>
+
+            <ul class="list-unstyled components">
+                <li><a href="index.html"><i class="fas fa-tachometer-alt me-2"></i> Tổng quan</a></li>
+                <li><a href="areas.html"><i class="fas fa-building me-2"></i> Khu trọ</a></li>
+                <li class="active"><a href="rooms.html"><i class="fas fa-door-open me-2"></i> Phòng trọ</a></li>
+                <li><a href="utilities.html"><i class="fas fa-bolt me-2"></i> Chốt điện nước</a></li>
+                <li><a href="tenants.html"><i class="fas fa-users me-2"></i> Khách thuê</a></li>
+                <li><a href="services.html"><i class="fas fa-concierge-bell me-2"></i> Dịch vụ/Phí</a></li>
+                <li><a href="contracts.html"><i class="fas fa-file-contract me-2"></i> Hợp đồng</a></li>
+                <li><a href="invoices.html"><i class="fas fa-file-invoice-dollar me-2"></i> Hóa đơn</a></li>
+                <li><a href="login.html" onclick="logout()"><i class="fas fa-sign-out-alt me-2"></i> Đăng xuất</a></li>
+            </ul>
+        </nav>
+
+        <!-- Page Content -->
+        <div id="content">
+            <header class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="animate-fade-in">Quản Lý Danh Sách Phòng</h2>
+                <div class="user-info">
+                    <span class="me-3">Xin chào, <strong>Admin</strong></span>
+                    <button onclick="logout()" class="btn btn-outline-danger btn-sm"><i class="fas fa-sign-out-alt"></i> Đăng xuất</button>
+                </div>
+            </header>
+
+            <!-- Stat Cards -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card stat-card-classic border-start border-primary border-4 animate-fade-in" style="animation-delay: 0.1s;">
+                        <div class="stat-content">
+                            <div class="text-primary fw-bold text-uppercase small mb-1">Tổng Số Phòng</div>
+                            <div class="h3 mb-0 fw-bold" id="stat-total-rooms">0</div>
+                        </div>
+                        <div class="icon-bg text-primary"><i class="fas fa-bed"></i></div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card stat-card-classic border-start border-success border-4 animate-fade-in" style="animation-delay: 0.2s;">
+                        <div class="stat-content">
+                            <div class="text-success fw-bold text-uppercase small mb-1">Phòng Đã Thuê</div>
+                            <div class="h3 mb-0 fw-bold" id="stat-rented-rooms">0</div>
+                        </div>
+                        <div class="icon-bg text-success"><i class="fas fa-check-circle"></i></div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card stat-card-classic border-start border-warning border-4 animate-fade-in" style="animation-delay: 0.3s;">
+                        <div class="stat-content">
+                            <div class="text-warning fw-bold text-uppercase small mb-1">Phòng Trống</div>
+                            <div class="h3 mb-0 fw-bold" id="stat-available-rooms">0</div>
+                        </div>
+                        <div class="icon-bg text-warning"><i class="fas fa-clock"></i></div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card stat-card-classic border-start border-info border-4 animate-fade-in" style="animation-delay: 0.4s;">
+                        <div class="stat-content">
+                            <div class="text-info fw-bold text-uppercase small mb-1">Doanh Thu Tháng</div>
+                            <div class="h3 mb-0 fw-bold" id="stat-total-income">0 đ</div>
+                        </div>
+                        <div class="icon-bg text-info"><i class="fas fa-dollar-sign"></i></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activity / Rooms Table -->
+            <div class="card animate-fade-in" style="animation-delay: 0.5s;">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Danh sách phòng khả dụng</h5>
+                    <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addRoomModal">
+                        <i class="fas fa-plus me-1"></i> Thêm phòng
+                    </button>
+                </div>
+                </div>
+                <!-- Bộ lọc chuyên nghiệp -->
+                <div class="px-3 py-3" style="background: linear-gradient(135deg, rgba(30,40,60,0.8), rgba(20,30,50,0.9)); border-bottom: 1px solid rgba(255,255,255,0.05);">
+                    <div class="d-flex align-items-center mb-2">
+                        <i class="fas fa-filter text-info me-2" style="font-size: 0.75rem;"></i>
+                        <span class="text-secondary small fw-bold text-uppercase" style="letter-spacing: 1px; font-size: 0.7rem;">Bộ lọc tìm kiếm</span>
+                    </div>
+                    <div class="row g-3 align-items-end">
+                        <div class="col-md-4">
+                            <label class="form-label text-secondary small mb-1"><i class="fas fa-search me-1"></i>Số phòng</label>
+                            <input type="text" id="filterSearch" class="form-control bg-dark text-white border-secondary rounded-3" placeholder="Nhập số phòng cần tìm..." oninput="filterRooms()" style="border-color: rgba(255,255,255,0.1) !important;">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label text-secondary small mb-1"><i class="fas fa-building me-1"></i>Khu trọ</label>
+                            <select id="filterArea" class="form-select bg-dark text-white border-secondary rounded-3" onchange="filterRooms()" style="border-color: rgba(255,255,255,0.1) !important;">
+                                <option value="">Tất cả khu trọ</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label text-secondary small mb-1"><i class="fas fa-toggle-on me-1"></i>Trạng thái</label>
+                            <select id="filterStatus" class="form-select bg-dark text-white border-secondary rounded-3" onchange="filterRooms()" style="border-color: rgba(255,255,255,0.1) !important;">
+                                <option value="">Tất cả trạng thái</option>
+                                <option value="empty">🟡 Phòng Trống</option>
+                                <option value="rented">🟢 Đã Thuê</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <button class="btn btn-outline-info btn-sm w-100 rounded-3" onclick="clearFilters()" style="border-color: rgba(255,255,255,0.15);">
+                                <i class="fas fa-redo me-1"></i> Đặt lại
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Số Phòng</th>
+                                    <th>Khu Trọ</th>
+                                    <th>Loại Phòng</th>
+                                    <th>Giá Thuê</th>
+                                    <th>Trạng Thái</th>
+                                    <th>Hành Động</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Data will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Lập Hợp Đồng -->
+    <div class="modal fade" id="addContractModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content bg-dark text-white border-secondary">
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title"><i class="fas fa-file-contract me-2 text-success"></i>Lập Hợp Đồng Thuê Phòng</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addContractForm">
+                        <div class="mb-3">
+                            <label class="form-label d-flex justify-content-between align-items-center">
+                                Chọn Khách Thuê
+                                <button type="button" class="btn btn-link text-info p-0 small text-decoration-none border-bottom border-info" onclick="openQuickAddTenant()"><i class="fas fa-plus-circle me-1"></i>Đăng ký khách mới</button>
+                            </label>
+                            <select class="form-select bg-dark text-white border-secondary" id="contractTenantId" required>
+                                <!-- Load từ API -->
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-secondary small">Phòng Thuê</label>
+                            <div class="p-2 bg-dark rounded border border-secondary text-info fw-bold" id="displayRoomNumber">--</div>
+                            <input type="hidden" id="contractRoomId">
+                        </div>
+                        <div class="row">
+                            <div class="col-6 mb-3">
+                                <label class="form-label text-secondary small">Ngày Ký</label>
+                                <input type="text" class="form-control bg-dark text-white border-secondary datepicker" id="contractDate" placeholder="dd/mm/yyyy" required>
+                            </div>
+                            <div class="col-6 mb-3">
+                                <label class="form-label text-secondary small">Ngày Hết Hạn</label>
+                                <input type="text" class="form-control bg-dark text-white border-secondary datepicker" id="contractEndDate" placeholder="dd/mm/yyyy" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Tiền Cọc (đ)</label>
+                            <input type="number" class="form-control bg-dark text-white border-secondary" id="contractDeposit" placeholder="Nhập số tiền cọc" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-cancel" data-bs-dismiss="modal">Hủy</button>
+                    <button type="button" class="btn btn-success px-4" onclick="submitContract()">Xác Nhận Thuê</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Thêm Phòng -->
+    <div class="modal fade" id="addRoomModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content bg-dark text-white border-secondary">
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title">Thêm Phòng Mới</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addRoomForm">
+                        <input type="hidden" id="editRoomId"> <!-- Để lưu ID khi sửa -->
+                        <div class="mb-3">
+                            <label class="form-label">Số Phòng</label>
+                            <input type="text" class="form-control bg-dark text-white border-secondary" id="roomNumber" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Loại Phòng</label>
+                            <input type="text" class="form-control bg-dark text-white border-secondary" id="roomType" placeholder="VD: Thường, VIP, Có gác..." required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Khu Trọ</label>
+                            <select class="form-select bg-dark text-white border-secondary" id="areaId" required>
+                                <!-- Sẽ load dữ liệu từ API -->
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Giá Thuê (đ)</label>
+                            <input type="number" class="form-control bg-dark text-white border-secondary" id="roomPrice" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Diện tích (m2)</label>
+                            <input type="number" class="form-control bg-dark text-white border-secondary" id="roomArea" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Nội thất (Mô tả chi tiết)</label>
+                            <textarea class="form-control bg-dark text-white border-secondary" id="roomFurniture" rows="3" placeholder="VD: Giường, Tủ quần áo, Máy lạnh..."></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-cancel" data-bs-dismiss="modal">Hủy</button>
+                    <button type="button" class="btn btn-primary" id="btnSubmitRoom" onclick="submitAddRoom()">Lưu Thông Tin</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Đăng Ký Nhanh Khách Thuê -->
+    <div class="modal fade" id="quickAddTenantModal" tabindex="-1" aria-hidden="true" style="z-index: 1060;">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content bg-dark text-white border-info shadow-lg">
+                <div class="modal-header border-info bg-info bg-opacity-10">
+                    <h6 class="modal-title text-info fw-bold"><i class="fas fa-user-plus me-2"></i>ĐĂNG KÝ NHANH KHÁCH THUÊ</h6>
+                    <button type="button" class="btn-close btn-close-white" onclick="closeQuickAddTenant()"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="quickTenantForm">
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Họ tên khách thuê *</label>
+                            <input type="text" class="form-control bg-dark text-white border-secondary" id="quickTenantName" required>
+                        </div>
+                        <div class="row">
+                            <div class="col-6 mb-3">
+                                <label class="form-label small">Giới tính</label>
+                                <select class="form-select bg-dark text-white border-secondary" id="quickTenantGioiTinh">
+                                    <option value="Nam">Nam</option>
+                                    <option value="Nữ">Nữ</option>
+                                    <option value="Khác">Khác</option>
+                                </select>
+                            </div>
+                            <div class="col-6 mb-3">
+                                <label class="form-label small">Quốc tịch</label>
+                                <input type="text" class="form-control bg-dark text-white border-secondary" id="quickTenantQuocTich" value="Việt Nam">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small">Số điện thoại *</label>
+                            <input type="text" class="form-control bg-dark text-white border-secondary" id="quickTenantPhone" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small">Số CCCD (Nên có)</label>
+                            <input type="text" class="form-control bg-dark text-white border-secondary" id="quickTenantCCCD">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small">Quê quán</label>
+                            <input type="text" class="form-control bg-dark text-white border-secondary" id="quickTenantQueQuan" placeholder="VD: TP. Hồ Chí Minh, Hà Nội...">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small">Email</label>
+                            <input type="email" class="form-control bg-dark text-white border-secondary" id="quickTenantEmail" placeholder="khach@example.com">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer border-info">
+                    <button type="button" class="btn btn-sm btn-cancel" onclick="closeQuickAddTenant()">Quay lại</button>
+                    <button type="button" class="btn btn-sm btn-info px-4" onclick="submitQuickTenant()">Lưu & Chọn</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <!-- Modal Xem Chi Tiết Phòng -->
+    <div class="modal fade" id="roomDetailModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content bg-dark text-white border-secondary">
+                <div class="modal-header border-secondary bg-primary bg-opacity-10">
+                    <h5 class="modal-title"><i class="fas fa-info-circle me-2"></i> CHI TIẾT PHÒNG & QUẢN LÝ NHÂN KHẨU</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="roomDetailContent">
+                    <!-- Nội dung đổ từ JS -->
+                </div>
+                <div class="modal-footer border-secondary">
+                    <div id="roomDetailActions" class="me-auto">
+                        <!-- Nút hành động (Gia hạn, Trả phòng) sẽ hiện ở đây -->
+                    </div>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Thêm Thành Viên -->
+    <div class="modal fade" id="addMemberModal" tabindex="-1" aria-hidden="true" style="z-index: 1070;">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content bg-dark text-white border-info shadow-lg">
+                <div class="modal-header border-info">
+                    <h6 class="modal-title"><i class="fas fa-user-plus me-2"></i> Thêm Thành Viên Ở Cùng</h6>
+                    <button type="button" class="btn-close btn-close-white" onclick="closeAddMember()"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addMemberForm">
+                        <input type="hidden" id="memberContractId">
+                        <div class="mb-3">
+                            <label class="form-label small">Họ tên *</label>
+                            <input type="text" class="form-control bg-dark text-white border-secondary" id="memberName" required>
+                        </div>
+                        <div class="row">
+                            <div class="col-6 mb-3">
+                                <label class="form-label small">Giới tính</label>
+                                <select class="form-select bg-dark text-white border-secondary" id="memberGioiTinh">
+                                    <option value="Nam">Nam</option>
+                                    <option value="Nữ">Nữ</option>
+                                    <option value="Khác">Khác</option>
+                                </select>
+                            </div>
+                            <div class="col-6 mb-3">
+                                <label class="form-label small">Số điện thoại</label>
+                                <input type="text" class="form-control bg-dark text-white border-secondary" id="memberPhone">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small">Số CCCD</label>
+                            <input type="text" class="form-control bg-dark text-white border-secondary" id="memberCCCD">
+                        </div>
+                        <div class="row">
+                            <div class="col-6 mb-3">
+                                <label class="form-label small">Quê quán</label>
+                                <input type="text" class="form-control bg-dark text-white border-secondary" id="memberQueQuan" placeholder="VD: Long An">
+                            </div>
+                            <div class="col-6 mb-3">
+                                <label class="form-label small">Quốc tịch</label>
+                                <input type="text" class="form-control bg-dark text-white border-secondary" id="memberQuocTich" value="Việt Nam">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small">Email</label>
+                            <input type="email" class="form-control bg-dark text-white border-secondary" id="memberEmail">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small">Ngày vào ở</label>
+                            <input type="text" class="form-control bg-dark text-white border-secondary datepicker" id="memberJoinDate" placeholder="dd/mm/yyyy">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-sm btn-secondary" onclick="closeAddMember()">Hủy</button>
+                    <button type="button" class="btn btn-sm btn-info px-4" onclick="submitMember()">Xác Nhận</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Gia Hạn Hợp Đồng -->
+    <div class="modal fade" id="renewContractModal" tabindex="-1" aria-hidden="true" style="z-index: 1080;">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content bg-dark text-white border-warning shadow-lg">
+                <div class="modal-header border-warning bg-warning bg-opacity-10">
+                    <h6 class="modal-title text-warning fw-bold"><i class="fas fa-calendar-plus me-2"></i> GIA HẠN HỢP ĐỒNG</h6>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="renewHDId">
+                    <input type="hidden" id="renewRoomId">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-secondary">Ngày hết hạn mới</label>
+                        <input type="text" class="form-control bg-dark text-white border-secondary datepicker" id="renewNewDate" placeholder="dd/mm/yyyy">
+                        <div class="small text-secondary mt-2">Mặc định hệ thống tự cộng thêm 6 tháng.</div>
+                    </div>
+                </div>
+                <div class="modal-footer border-warning">
+                    <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="button" class="btn btn-sm btn-warning px-4" onclick="submitRenew()">Xác Nhận</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Flatpickr -->
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/vn.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/confirm-modal.js"></script>
+    <script src="js/frontend.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Khởi tạo Datepicker
+            flatpickr(".datepicker", {
+                allowInput: true,
+                dateFormat: "d/m/Y",
+                locale: "vn",
+                monthSelectorType: "dropdown"
+            });
+            // Kiểm tra đăng nhập
+            if(!localStorage.getItem('user')) {
+                window.location.href = 'login.html';
+                return;
+            }
+            fetchThongKe();
+            fetchDanhSachPhong();
+            fetchKhuTro();
+        });
+        
+        function logout() {
+            localStorage.removeItem('user');
+            window.location.href = 'login.html';
+        }
+    </script>
+</body>
+</html>

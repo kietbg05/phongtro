@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dịch Vụ | Hệ Thống Quản Lý Phòng Trọ</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <div class="wrapper d-flex">
+        <!-- Sidebar -->
+        <nav id="sidebar">
+            <div class="sidebar-header">
+                <i class="fas fa-home-user me-2"></i> QUẢN LÝ PHÒNG
+            </div>
+            <ul class="list-unstyled components">
+                <li><a href="index.html"><i class="fas fa-tachometer-alt me-2"></i> Tổng quan</a></li>
+                <li><a href="areas.html"><i class="fas fa-building me-2"></i> Khu trọ</a></li>
+                <li><a href="rooms.html"><i class="fas fa-door-open me-2"></i> Phòng trọ</a></li>
+                <li><a href="utilities.html"><i class="fas fa-bolt me-2"></i> Chốt điện nước</a></li>
+                <li><a href="tenants.html"><i class="fas fa-users me-2"></i> Khách thuê</a></li>
+                <li class="active"><a href="services.html"><i class="fas fa-concierge-bell me-2"></i> Dịch vụ/Phí</a></li>
+                <li><a href="contracts.html"><i class="fas fa-file-contract me-2"></i> Hợp đồng</a></li>
+                <li><a href="invoices.html"><i class="fas fa-file-invoice-dollar me-2"></i> Hóa đơn</a></li>
+                <li><a href="login.html" onclick="logout()"><i class="fas fa-sign-out-alt me-2"></i> Đăng xuất</a></li>
+            </ul>
+        </nav>
+
+        <!-- Page Content -->
+        <div id="content">
+            <header class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="animate-fade-in">Danh Mục Dịch Vụ & Phụ Phí</h2>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addServiceModal">
+                    <i class="fas fa-plus me-2"></i> Định nghĩa dịch vụ
+                </button>
+            </header>
+
+            <div class="alert alert-info bg-dark border-info text-info small">
+                <i class="fas fa-info-circle me-2"></i> Bạn có thể định nghĩa các loại phí thu theo phòng (Internet, Rác...) hoặc theo đầu người (Vệ sinh, Nước sinh hoạt...). Các phí này sẽ xuất hiện khi lập hóa đơn.
+            </div>
+
+            <div class="card animate-fade-in">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0" id="serviceTable">
+                            <thead>
+                                <tr>
+                                    <th>Tên Dịch Vụ</th>
+                                    <th>Giá (VNĐ)</th>
+                                    <th>Đơn Vị</th>
+                                    <th>Loại Thu</th>
+                                    <th>Hành Động</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Load từ API -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Thêm/Sửa Dịch Vụ -->
+    <div class="modal fade" id="addServiceModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content bg-dark text-white border-secondary">
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title">Thông Tin Dịch Vụ</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="serviceForm">
+                        <input type="hidden" id="editServiceId">
+                        <div class="mb-3">
+                            <label class="form-label">Tên dịch vụ/phụ phí</label>
+                            <input type="text" class="form-control bg-dark text-white border-secondary" id="serviceName" placeholder="VD: Tiền rác, Internet..." required>
+                        </div>
+                        <div class="row">
+                            <div class="col-6 mb-3">
+                                <label class="form-label">Đơn giá (đ)</label>
+                                <input type="number" class="form-control bg-dark text-white border-secondary" id="servicePrice" required>
+                            </div>
+                            <div class="col-6 mb-3">
+                                <label class="form-label">Đơn vị tính</label>
+                                <input type="text" class="form-control bg-dark text-white border-secondary" id="serviceUnit" placeholder="Tháng, Chiếc, Người..." required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Cách thức thu</label>
+                            <select class="form-select bg-dark text-white border-secondary" id="serviceType">
+                                <option value="Theo phòng">Theo phòng (Cố định mỗi tháng)</option>
+                                <option value="Theo người">Theo người (Nhân với số người ở)</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="button" class="btn btn-primary" onclick="submitService()">Lưu Dịch Vụ</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/confirm-modal.js"></script>
+    <script>
+        const API_URL = '/api';
+
+        document.addEventListener('DOMContentLoaded', fetchServices);
+
+        async function fetchServices() {
+            try {
+                const res = await fetch(`${API_URL}/dichvu`);
+                const data = await res.json();
+                const tbody = document.querySelector('#serviceTable tbody');
+                window.allServicesData = data;
+                tbody.innerHTML = data.map((s, index) => `
+                    <tr>
+                        <td class="fw-bold text-info">${s.TenDichVu}</td>
+                        <td class="text-warning">${new Intl.NumberFormat('vi-VN').format(s.Gia)} đ</td>
+                        <td>${s.DonViTinh}</td>
+                        <td>
+                            <span class="badge ${s.loaiThu === 'Theo người' ? 'bg-primary' : 'bg-secondary'}">
+                                ${s.loaiThu}
+                            </span>
+                        </td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-warning" onclick="openEditByIndex(${index})"><i class="fas fa-edit"></i></button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="deleteService(${s.idDichVu})"><i class="fas fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (err) { console.error(err); }
+        }
+
+        function openEditByIndex(index) {
+            const s = window.allServicesData[index];
+            if (s) openEditService(s);
+        }
+
+        async function submitService() {
+            const id = document.getElementById('editServiceId').value;
+            const data = {
+                TenDichVu: document.getElementById('serviceName').value,
+                Gia: document.getElementById('servicePrice').value,
+                DonViTinh: document.getElementById('serviceUnit').value,
+                loaiThu: document.getElementById('serviceType').value
+            };
+
+            const url = id ? `${API_URL}/dichvu/${id}` : `${API_URL}/dichvu`;
+            const method = id ? 'PUT' : 'POST';
+
+            try {
+                const res = await fetch(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                if (res.ok) {
+                    location.reload();
+                } else {
+                    alert('Lỗi khi lưu dịch vụ');
+                }
+            } catch (err) { alert('Lỗi kết nối'); }
+        }
+
+        function openEditService(s) {
+            document.getElementById('editServiceId').value = s.idDichVu;
+            document.getElementById('serviceName').value = s.TenDichVu;
+            document.getElementById('servicePrice').value = s.Gia;
+            document.getElementById('serviceUnit').value = s.DonViTinh;
+            document.getElementById('serviceType').value = s.loaiThu;
+            new bootstrap.Modal(document.getElementById('addServiceModal')).show();
+        }
+
+        async function deleteService(id) {
+            showConfirm('Xóa dịch vụ này?', async () => {
+                try {
+                    const res = await fetch(`${API_URL}/dichvu/${id}`, { method: 'DELETE' });
+                    const result = await res.json();
+                    if (res.ok) fetchServices();
+                    else alert(result.error || 'Không thể xóa dịch vụ này.');
+                } catch (err) { alert('Lỗi kết nối'); }
+            });
+        }
+
+        function logout() { localStorage.removeItem('user'); window.location.href = 'login.html'; }
+    </script>
+</body>
+</html>

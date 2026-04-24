@@ -1,0 +1,122 @@
+================================================================================
+NHẬT KÝ CHI TIẾT QUY TRÌNH PHÁT TRIỂN HỆ THỐNG QUẢN LÝ PHÒNG TRỌ
+================================================================================
+
+Tài liệu này ghi lại toàn bộ lộ trình triển khai từ kỹ thuật đến nghiệp vụ. Đây là tài liệu minh chứng cho quá trình code thực tế, giải thích chi tiết các bước thực hiện.
+
+--------------------------------------------------------------------------------
+GIAI ĐOẠN 1: PHÂN TÍCH YÊU CẦU VÀ THIẾT KẾ CƠ SỞ DỮ LIỆU
+--------------------------------------------------------------------------------
+Bước 1.1: Xác định các thực thể chính
+- Hệ thống cần quản lý các đối tượng: Khu trọ, Phòng, Người thuê, Hợp đồng và Hóa đơn.
+- Xác định các thuộc tính cần thiết: Ví dụ Phòng cần có Diện tích, Giá tiền, Số phòng.
+
+Bước 1.2: Thiết kế lược đồ quan hệ (ERD)
+- Tạo bảng KhuTro làm cha của bảng Phong (Quan hệ 1-N).
+- Tạo bảng TaiKhoan để quản lý đăng nhập cho cả Chủ và Khách.
+- Tạo bảng NguoiThue liên kết với TaiKhoan qua idTaiKhoan.
+- Tạo bảng HopDong làm trung gian kết nối giữa NguoiThue và Phong.
+- Tạo bảng HoaDon liên kết với HopDong để thu tiền định kỳ.
+
+Bước 1.3: Viết mã SQL khơi tạo (setup.sql)
+- Thực hiện lệnh CREATE DATABASE.
+- Khởi tạo lần lượt các bảng theo thứ tự ưu tiên (bảng cha trước, bảng con sau để tránh lỗi khóa ngoại).
+- Thêm dữ liệu mẫu ban đầu để kiểm tra hệ thống.
+
+--------------------------------------------------------------------------------
+GIAI ĐOẠN 2: THIẾT LẬP MÔI TRƯỜNG VÀ BACKEND (NODE.JS)
+--------------------------------------------------------------------------------
+Bước 2.1: Khởi tạo dự án
+- Chạy lệnh 'npm init' để tạo file package.json.
+- Cài đặt các thư viện thiết yếu: express (tạo server), mysql2 (kết nối DB), cors (cho phép gọi API).
+
+Bước 2.2: Viết module kết nối DB (db.js)
+- Sử dụng hàm createConnection của thư viện mysql2.
+- Cấu hình thông số: host, user, password, database.
+- Thực hiện lệnh db.connect() và xử lý thông báo lỗi nếu không kết nối được XAMPP.
+
+Bước 2.3: Xây dựng các API cơ bản (server.js)
+- Viết API GET /api/phong: Sử dụng câu lệnh JOIN để lấy cả tên Khu trọ và thông tin phòng.
+- Viết API GET /api/khutro: Để đổ dữ liệu vào các ô Select (Dropdown).
+- Cấu hình 'express.static' để server có thể phục vụ các file HTML/CSS/JS từ thư mục 'public'.
+
+--------------------------------------------------------------------------------
+GIAI ĐOẠN 3: XÂY DỰNG GIAO DIỆN (FRONTEND) VÀ STYLE
+--------------------------------------------------------------------------------
+Bước 3.1: Thiết kế hệ thống Style (style.css)
+- Định nghĩa các biến CSS (Variables) cho màu sắc: --primary, --dark-bg, --card-bg.
+- Sử dụng font chữ 'Inter' từ Google Fonts.
+- Thiết kế Sidebar cố định bên trái (Fixed sidebar) và khu vực nội dung (Content area) bên phải.
+- Áp dụng Glassmorphism: box-shadow cực mỏng, backdrop-filter và màu nền RGBA.
+
+Bước 3.2: Xây dựng trang Dashboard (index.html)
+- Tạo các thẻ thống kê bằng thẻ <div> và Icon từ FontAwesome.
+- Tạo bảng hiển thị danh sách phòng.
+- Tạo Modal (cửa sổ nổi) của Bootstrap 5 để nhập thông tin thêm phòng mới.
+
+Bước 3.3: Xây dựng trang Quản lý Khu trọ (areas.html)
+- Đây là bước nâng cao tính trực quan. Thay vì dùng bảng, tôi đã sử dụng Grid Card.
+- Mỗi card hiển thị tổng số phòng và số người đang ở (sử dụng câu lệnh COUNT lồng trong SQL).
+
+--------------------------------------------------------------------------------
+GIAI ĐOẠN 4: KẾT NỐI TƯƠNG TÁC (FRONTEND -> BACKEND)
+--------------------------------------------------------------------------------
+Bước 4.1: Viết script gọi dữ liệu (frontend.js)
+- Sử dụng hàm 'async/await' để gọi dữ liệu không đồng bộ, tránh làm treo trình duyệt.
+- Dùng hàm '.map()' để chuyển đổi mảng dữ liệu từ Server thành các hàng <tr> trong bảng.
+
+Bước 4.2: Xử lý Form thêm mới
+- Viết hàm submitAddRoom(): Lấy dữ liệu bằng document.getElementById.
+- Gửi dữ liệu qua fetch() với phương thức 'POST'.
+- Sau khi thêm xong, gọi lại hàm fetchDanhSachPhong() để cập nhật bảng ngay lập tức (Real-time update).
+
+Bước 4.3: Xử lý chức năng Chỉnh sửa (Edit)
+- Đây là phần khó nhất: Khi bấm 'Sửa', phải đổ dữ liệu cũ vào các ô Input của Modal.
+- Dùng hàm JSON.stringify() để truyền cả đối tượng 'room' vào hàm onclick.
+- Sau khi sửa, dùng phương thức 'PUT' để cập nhật vào DB.
+
+--------------------------------------------------------------------------------
+GIAI ĐOẠN 5: XỬ LÝ NGHIỆP VỤ PHỨC TẠP
+--------------------------------------------------------------------------------
+Bước 5.1: Logic Hợp đồng (contracts.html)
+- Xây dựng API lọc khách thuê chưa có phòng (nguoithue/chua-thue) và phòng đang trống (phong/trong).
+- Chỉ cho phép ký hợp đồng với những đối tượng này để tránh trùng lặp.
+
+Bước 5.2: Logic Hóa đơn (invoices.html)
+- Tính toán tổng tiền: Tiền phòng (lấy từ DB) + Tiền điện nước (tạm tính).
+- Lưu trạng thái: 'Chưa thanh toán' hoặc 'Đã thanh toán'.
+- Viết API /pay để cập nhật trạng thái hóa đơn chỉ bằng một click.
+
+Bước 5.3: Logic Xóa dữ liệu (Delete)
+- Thêm icon Thùng rác và hàm deleteRoom, deleteTenant.
+- Xử lý ràng buộc khóa ngoại: Kiểm tra và hiển thị alert nếu người dùng xóa dữ liệu đang có liên kết.
+
+--------------------------------------------------------------------------------
+GIAI ĐOẠN 6: TỐI ƯU HÓA VÀ FIX LỖI (DEBUGGING)
+--------------------------------------------------------------------------------
+Bước 6.1: Khắc phục lỗi hiển thị (UI Bugs)
+- Fix lỗi chữ bị tối: Ép màu trắng (color: white !important) cho toàn bộ tiêu đề h1-h6 trong card.
+- Fix lỗi bảng bị trắng trong dark mode: Thêm thuộc tính background-color cho các ô <td>.
+- Fix lỗi căn chỉnh: Điều chỉnh padding và margin cho Sidebar để không bị chồng lấp nội dung.
+
+Bước 6.2: Khắc phục lỗi logic (API Bugs)
+- Sửa lỗi đường dẫn tĩnh: Thêm 'path.join' trong server.js để server tìm đúng file HTML khi chạy trên các máy khác nhau.
+- Sửa lỗi missing field: Thêm trường 'loaiPhong' vào cả DB, API và Form nhập liệu khi thấy người dùng phản ánh không nhập được loại phòng.
+
+--------------------------------------------------------------------------------
+GIAI ĐOẠN 7: ĐÓNG GÓI VÀ BÀN GIAO
+--------------------------------------------------------------------------------
+Bước 7.1: Xuất DB
+- Xuất file full_export.sql bao gồm cả cấu trúc và các dữ liệu đã test thành công.
+
+Bước 7.2: Viết tài liệu
+- Tạo file README.md giải thích cấu trúc project.
+- Tạo file HUONG_DAN_TRA_LOI_VAN_DAP.txt để chuẩn bị cho buổi bảo vệ.
+- Tạo file CHAY_UNG_DUNG.bat để người dùng không chuyên cũng có thể mở server dễ dàng.
+
+KẾT LUẬN:
+Hệ thống được code trong một tuần với cường độ cao, tuân thủ đúng các nguyên tắc lập trình hướng đối tượng và mô hình MVC (ở mức đơn giản). Toàn bộ mã nguồn đã được kiểm thử (Unit test) qua các chức năng chính và chạy mượt mà trên môi trường máy cục bộ.
+================================================================================
+NGƯỜI LẬP NHẬT KÝ: [Tên của bạn]
+PHIÊN BẢN: PHÁT TRIỂN CUỐI CÙNG (FINAL RELEASE)
+================================================================================

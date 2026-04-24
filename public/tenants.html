@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản Lý Cư Dân | Hệ Thống Quản Lý Phòng Trọ</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        :root { --bg-darker: #0f172a; --card-bg: #1e293b; --accent: #38bdf8; --input-bg: #0b1120; }
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg-darker); color: #e2e8f0; }
+        .card { background-color: var(--card-bg); border: 1px solid rgba(255,255,255,0.05); }
+        .table { color: #cbd5e1; }
+        .table thead th { background-color: rgba(255,255,255,0.02); color: #94a3b8; font-weight: 600; text-transform: uppercase; font-size: 0.75rem; border: none; }
+        .table td { border-color: rgba(255,255,255,0.05); vertical-align: middle; }
+        .nav-tabs .nav-link { border: none; color: #64748b; font-weight: 600; padding: 1rem 1.5rem; transition: 0.3s; }
+        .nav-tabs .nav-link.active { background: transparent; color: var(--accent); border-bottom: 2px solid var(--accent); }
+        
+        /* Modal & Form Fix */
+        .modal-content { background-color: var(--card-bg) !important; border: 1px solid var(--accent) !important; box-shadow: 0 0 20px rgba(56, 189, 248, 0.2); }
+        .modal-header { border-bottom: 1px solid rgba(56, 189, 248, 0.2); background: rgba(56, 189, 248, 0.05); }
+        .form-control, .form-select { 
+            background-color: var(--input-bg) !important; 
+            border: 1px solid rgba(255,255,255,0.1) !important; 
+            color: #fff !important; 
+        }
+        .form-control:focus, .form-select:focus { 
+            border-color: var(--accent) !important; 
+            box-shadow: 0 0 0 0.25rem rgba(56, 189, 248, 0.1) !important;
+            background-color: var(--input-bg) !important;
+        }
+        .form-label { color: var(--accent); font-weight: 600; font-size: 0.8rem; margin-bottom: 0.4rem; }
+        .btn-primary { background-color: var(--accent); border: none; color: #000; font-weight: 700; transition: 0.3s; }
+        .btn-primary:hover { background-color: #7dd3fc; transform: translateY(-1px); }
+        .modal-footer { border-top: 1px solid rgba(255,255,255,0.05); }
+        
+        .badge.bg-pink { background-color: #ec4899 !important; color: white; }
+
+        /* Dynamic Island Notification */
+        .island-container {
+            position: fixed; top: 15px; left: 50%; transform: translateX(-50%);
+            z-index: 10000; pointer-events: none;
+        }
+        .dynamic-island {
+            background: #000; color: white;
+            min-width: 120px; height: 35px; border-radius: 20px;
+            display: flex; align-items: center; justify-content: center;
+            padding: 0 15px; overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            transition: all 0.6s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+            opacity: 0; transform: scale(0.8) translateY(-20px);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .dynamic-island.active {
+            opacity: 1; transform: scale(1) translateY(0);
+            min-width: 300px; height: 50px; border-radius: 25px;
+        }
+        .island-content {
+            display: flex; align-items: center; white-space: nowrap;
+            opacity: 0; transition: opacity 0.3s 0.2s;
+        }
+        .dynamic-island.active .island-content { opacity: 1; }
+        .island-icon { margin-right: 12px; font-size: 1.2rem; }
+        .island-text { font-size: 0.9rem; font-weight: 600; }
+
+        /* Nâng cấp độ sáng cho Placeholder */
+        input::placeholder, textarea::placeholder {
+            color: rgba(255, 255, 255, 0.45) !important;
+        }
+        .form-control:focus::placeholder {
+            color: rgba(255, 255, 255, 0.2) !important;
+        }
+
+        /* Nút Hủy Bỏ Hiện Đại */
+        .btn-cancel {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: rgba(255, 255, 255, 0.6) !important;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            padding: 8px 20px;
+            border-radius: 8px;
+        }
+        .btn-cancel:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.3);
+            color: #fff !important;
+            transform: translateY(-1px);
+        }
+    </style>
+</head>
+<body>
+    <div class="wrapper d-flex">
+        <nav id="sidebar">
+            <div class="sidebar-header"><i class="fas fa-home-user me-2"></i> QUẢN LÝ PHÒNG</div>
+            <ul class="list-unstyled components">
+                <li><a href="index.html"><i class="fas fa-tachometer-alt me-2"></i> Tổng quan</a></li>
+                <li><a href="areas.html"><i class="fas fa-building me-2"></i> Khu trọ</a></li>
+                <li><a href="rooms.html"><i class="fas fa-door-open me-2"></i> Phòng trọ</a></li>
+                <li><a href="utilities.html"><i class="fas fa-bolt me-2"></i> Chốt điện nước</a></li>
+                <li class="active"><a href="tenants.html"><i class="fas fa-users me-2"></i> Khách thuê</a></li>
+                <li><a href="services.html"><i class="fas fa-concierge-bell me-2"></i> Dịch vụ/Phí</a></li>
+                <li><a href="contracts.html"><i class="fas fa-file-contract me-2"></i> Hợp đồng</a></li>
+                <li><a href="invoices.html"><i class="fas fa-file-invoice-dollar me-2"></i> Hóa đơn</a></li>
+                <li><a href="#" onclick="logout()"><i class="fas fa-sign-out-alt me-2"></i> Đăng xuất</a></li>
+            </ul>
+        </nav>
+
+        <div id="content" class="p-4 w-100">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="fw-bold fs-4">Quản Lý Cư Dân</h2>
+                <div class="d-flex gap-2">
+                    <input type="text" id="searchInput" class="form-control bg-dark text-white border-secondary" placeholder="Tìm theo tên, SĐT, Phòng..." style="width:300px">
+                    <button class="btn btn-primary px-4" onclick="openAddTenant()"><i class="fas fa-plus me-2"></i>Thêm Khách</button>
+                </div>
+            </div>
+
+            <!-- Stats -->
+            <div class="row g-3 mb-4">
+                <div class="col-md-4">
+                    <div class="card p-3 shadow-sm border-0">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-primary bg-opacity-10 p-3 rounded-3 me-3 text-primary"><i class="fas fa-users fa-lg"></i></div>
+                            <div><div class="small text-secondary">Tổng cư dân</div><h3 class="fw-bold mb-0" id="statTotal">0</h3></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card p-3 shadow-sm border-0">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-info bg-opacity-10 p-3 rounded-3 me-3 text-info"><i class="fas fa-user-tie fa-lg"></i></div>
+                            <div><div class="small text-secondary">Chủ hộ đang ở</div><h3 class="fw-bold mb-0" id="statTenants">0</h3></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card p-3 shadow-sm border-0">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-success bg-opacity-10 p-3 rounded-3 me-3 text-success"><i class="fas fa-user-friends fa-lg"></i></div>
+                            <div><div class="small text-secondary">Thành viên ở cùng</div><h3 class="fw-bold mb-0" id="statMembers">0</h3></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="island-container">
+                <div id="dynamicIsland" class="dynamic-island">
+                    <div class="island-content" id="islandContent"></div>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <select id="filterArea" class="form-select bg-dark text-white border-secondary w-auto" onchange="applyFilters()">
+                    <option value="">Tất cả khu trọ</option>
+                </select>
+            </div>
+
+            <ul class="nav nav-tabs mb-0">
+                <li class="nav-item">
+                    <button class="nav-link active" id="tabTenants" data-bs-toggle="tab" data-bs-target="#paneTenants">
+                        Người thuê chính <span class="badge bg-primary ms-2" id="countTenants">0</span>
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" id="tabMembers" data-bs-toggle="tab" data-bs-target="#paneMembers">
+                        Thành viên ở cùng <span class="badge bg-secondary ms-2" id="countMembers">0</span>
+                    </button>
+                </li>
+            </ul>
+
+            <div class="tab-content card border-top-0 rounded-bottom">
+                <div class="tab-pane fade show active p-0" id="paneTenants">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0" id="tableTenants">
+                            <thead>
+                                <tr>
+                                    <th>Họ Tên</th>
+                                    <th>Giới Tính</th>
+                                    <th>Số CCCD</th>
+                                    <th>Số Điện Thoại</th>
+                                    <th>Email</th>
+                                    <th>Quê Quán</th>
+                                    <th>Phòng</th>
+                                    <th class="text-end">Hành động</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="tab-pane fade p-0" id="paneMembers">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0" id="tableMembers">
+                            <thead>
+                                <tr>
+                                    <th>Họ Tên</th>
+                                    <th>Giới Tính</th>
+                                    <th>CCCD</th>
+                                    <th>SĐT</th>
+                                    <th>Email</th>
+                                    <th>Phòng</th>
+                                    <th>Khu Trọ</th>
+                                    <th>Chủ hộ</th>
+                                    <th class="text-end">Hành động</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal cho Chủ Hộ -->
+    <div class="modal fade" id="tenantModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content shadow-lg">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold text-white"><i class="fas fa-user-edit me-2 text-primary"></i> <span id="tenantModalTitle">Khách Thuê</span></h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form id="tenantForm">
+                        <input type="hidden" id="editId">
+                        <div class="mb-3">
+                            <label class="form-label">HỌ TÊN KHÁCH HÀNG *</label>
+                            <input type="text" class="form-control form-control-lg" id="name" required placeholder="Nhập họ tên đầy đủ">
+                        </div>
+                        <div class="row g-3 mb-3">
+                            <div class="col-6">
+                                <label class="form-label">GIỚI TÍNH</label>
+                                <select class="form-select" id="gender">
+                                    <option value="Nam">Nam</option>
+                                    <option value="Nữ">Nữ</option>
+                                    <option value="Khác">Khác</option>
+                                </select>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label">ĐIỆN THOẠI *</label>
+                                <input type="text" class="form-control" id="phone" required placeholder="0xxx...">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">SỐ CCCD (DANH TÍNH) *</label>
+                            <input type="text" class="form-control" id="cccd" required placeholder="Nhập 12 số CCCD">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">QUÊ QUÁN</label>
+                            <input type="text" class="form-control" id="hometown" placeholder="Tỉnh/Thành phố">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">EMAIL</label>
+                            <input type="email" class="form-control" id="email" placeholder="example@gmail.com">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-cancel" data-bs-dismiss="modal">Hủy bỏ</button>
+                    <button type="button" class="btn btn-primary px-4" id="btnSubmit" onclick="submitTenant()">LƯU THÔNG TIN</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal cho Thành Viên -->
+    <div class="modal fade" id="memberModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content shadow-lg" style="border-color: #10b981 !important;">
+                <div class="modal-header" style="background: rgba(16, 185, 129, 0.05);">
+                    <h5 class="modal-title fw-bold text-white"><i class="fas fa-user-friends me-2 text-success"></i> SỬA THÀNH VIÊN</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form id="memberForm">
+                        <input type="hidden" id="editMemberId">
+                        <div class="mb-3">
+                            <label class="form-label text-success">HỌ TÊN THÀNH VIÊN *</label>
+                            <input type="text" class="form-control form-control-lg" id="mName" required>
+                        </div>
+                        <div class="row g-3 mb-3">
+                            <div class="col-6">
+                                <label class="form-label text-success">GIỚI TÍNH</label>
+                                <select class="form-select" id="mGender">
+                                    <option value="Nam">Nam</option>
+                                    <option value="Nữ">Nữ</option>
+                                    <option value="Khác">Khác</option>
+                                </select>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label text-success">SỐ ĐIỆN THOẠI</label>
+                                <input type="text" class="form-control" id="mPhone">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-success">SỐ CCCD</label>
+                            <input type="text" class="form-control" id="mCccd">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-success">ĐỊA CHỈ EMAIL</label>
+                            <input type="email" class="form-control" id="mEmail" placeholder="member@example.com">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-success">QUÊ QUÁN / THƯỜNG TRÚ</label>
+                            <input type="text" class="form-control" id="mHometown" placeholder="Nhập quê quán">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-link text-secondary text-decoration-none mr-auto" data-bs-dismiss="modal">Đóng</button>
+                    <button type="button" class="btn btn-success px-4 py-2 fw-bold text-dark" onclick="submitMember()">CẬP NHẬT NGAY</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/confirm-modal.js"></script>
+    <script>
+        const API = '/api';
+        let tenants = [];
+        let members = [];
+        let filteredTenants = [];
+        let filteredMembers = [];
+
+        function showToast(msg, type = 'success') {
+            const island = document.getElementById('dynamicIsland');
+            const content = document.getElementById('islandContent');
+            const color = type === 'success' ? '#10b981' : '#ef4444';
+            const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-triangle';
+
+            content.innerHTML = `
+                <i class="fas ${icon} island-icon" style="color: ${color}"></i>
+                <span class="island-text text-white">${msg}</span>
+            `;
+
+            island.classList.add('active');
+            
+            setTimeout(() => {
+                island.classList.remove('active');
+            }, 3500);
+        }
+
+        // Khởi tạo các Modal để dùng chung (tránh lỗi z-index/multiple instance)
+        let tModalInstance, mModalInstance;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            tModalInstance = new bootstrap.Modal(document.getElementById('tenantModal'));
+            mModalInstance = new bootstrap.Modal(document.getElementById('memberModal'));
+            loadData();
+            loadAreas();
+            
+            document.getElementById('searchInput').addEventListener('input', applyFilters);
+        });
+
+        async function loadAreas() {
+            try {
+                const res = await fetch(`${API}/khutro`);
+                const data = await res.json();
+                const select = document.getElementById('filterArea');
+                data.forEach(k => {
+                    const opt = document.createElement('option');
+                    opt.value = k.TenKhuTro; opt.textContent = k.TenKhuTro;
+                    select.appendChild(opt);
+                });
+            } catch (e) {}
+        }
+
+        async function loadData() {
+            try {
+                const [resT, resM] = await Promise.all([
+                    fetch(`${API}/nguoithue`),
+                    fetch(`${API}/members/all`)
+                ]);
+                tenants = await resT.json();
+                members = await resM.json();
+                applyFilters();
+            } catch (e) { alert('Lỗi tải dữ liệu máy chủ!'); }
+        }
+
+        function normalizeStr(str) {
+            return (str || '').toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d");
+        }
+
+        function highlightText(text, query) {
+            if (!query) return text;
+            const normalizedText = normalizeStr(text);
+            const normalizedQuery = normalizeStr(query);
+            if (!normalizedText.includes(normalizedQuery)) return text;
+            
+            const regex = new RegExp(`(${query.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&')})`, 'gi');
+            return text.replace(regex, '<mark class="p-0 bg-warning text-dark">$1</mark>');
+        }
+
+        function applyFilters() {
+            const rawTxt = document.getElementById('searchInput').value;
+            const txt = normalizeStr(rawTxt);
+            const area = document.getElementById('filterArea').value;
+
+            filteredTenants = tenants.filter(t => {
+                const searchFields = [t.HoTen, t.CCCD, t.SoDT, t.Email, t.QueQuan, t.SoPhong];
+                const mSearch = searchFields.some(f => normalizeStr(f).includes(txt));
+                const mArea = !area || t.TenKhuTro === area;
+                return mSearch && mArea;
+            });
+
+            filteredMembers = members.filter(m => {
+                const searchFields = [m.HoTen, m.CCCD, m.SoDT, m.Email, m.QueQuan, m.ChuHopDong, m.SoPhong];
+                const mSearch = searchFields.some(f => normalizeStr(f).includes(txt));
+                const mArea = !area || m.TenKhuTro === area;
+                return mSearch && mArea;
+            });
+
+            renderTenants(rawTxt);
+            renderMembers(rawTxt);
+            updateStats();
+
+            if (txt.length > 0) {
+                const activeTab = document.querySelector('.nav-link.active').id;
+                if (activeTab === 'tabTenants' && filteredTenants.length === 0 && filteredMembers.length > 0) {
+                    document.getElementById('tabMembers').click();
+                } else if (activeTab === 'tabMembers' && filteredMembers.length === 0 && filteredTenants.length > 0) {
+                    document.getElementById('tabTenants').click();
+                }
+            }
+        }
+
+        function updateStats() {
+            const activeT = filteredTenants.filter(t => t.idHopDong).length;
+            document.getElementById('statTenants').textContent = activeT;
+            document.getElementById('statMembers').textContent = filteredMembers.length;
+            document.getElementById('statTotal').textContent = activeT + filteredMembers.length;
+            document.getElementById('countTenants').textContent = filteredTenants.length;
+            document.getElementById('countMembers').textContent = filteredMembers.length;
+        }
+
+        function renderTenants(query = '') {
+            const body = document.querySelector('#tableTenants tbody');
+            if (!filteredTenants.length) { body.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-secondary">Không có kết quả khớp</td></tr>'; return; }
+            body.innerHTML = filteredTenants.map((t, idx) => `
+                <tr>
+                    <td class="fw-bold">${highlightText(t.HoTen, query)}</td>
+                    <td><span class="badge ${t.GioiTinh === 'Nữ' ? 'bg-pink' : 'bg-info'} bg-opacity-75">${t.GioiTinh || 'Nam'}</span></td>
+                    <td><code>${highlightText(t.CCCD || '', query)}</code></td>
+                    <td class="text-warning">${highlightText(t.SoDT, query)}</td>
+                    <td class="small">${highlightText(t.Email || '', query)}</td>
+                    <td class="small text-secondary">${highlightText(t.QueQuan || '', query)}</td>
+                    <td><span class="badge ${t.SoPhong ? 'bg-primary' : 'bg-secondary'}">${highlightText(t.SoPhong ? 'P.' + t.SoPhong : 'Trống', query)}</span></td>
+                    <td class="text-end">
+                        <button class="btn btn-sm btn-outline-warning" onclick="editTenant(${idx})"><i class="fas fa-edit"></i></button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteTenant(${t.idNguoiThue})"><i class="fas fa-trash"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function renderMembers(query = '') {
+            const body = document.querySelector('#tableMembers tbody');
+            if (!filteredMembers.length) { body.innerHTML = '<tr><td colspan="8" class="text-center py-4 text-secondary">Không có kết quả khớp</td></tr>'; return; }
+            body.innerHTML = filteredMembers.map((m, idx) => `
+                <tr>
+                    <td class="fw-bold">${highlightText(m.HoTen, query)}</td>
+                    <td><span class="badge ${m.GioiTinh === 'Nữ' ? 'bg-pink' : 'bg-info'} bg-opacity-75">${m.GioiTinh || 'Nam'}</span></td>
+                    <td><small>${highlightText(m.CCCD || '', query)}</small></td>
+                    <td class="text-warning small">${highlightText(m.SoDT || '', query)}</td>
+                    <td class="small text-info">${highlightText(m.Email || '', query)}</td>
+                    <td><span class="badge bg-primary">${highlightText('P.' + m.SoPhong, query)}</span></td>
+                    <td class="small text-secondary">${m.TenKhuTro}</td>
+                    <td class="small">${highlightText(m.ChuHopDong, query)}</td>
+                    <td class="text-end">
+                        <button class="btn btn-sm btn-outline-warning" onclick="editMember(${idx})"><i class="fas fa-edit"></i></button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteMember(${m.idThanhVien})"><i class="fas fa-trash"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function openAddTenant() {
+            document.getElementById('tenantForm').reset();
+            document.getElementById('editId').value = '';
+            document.getElementById('tenantModalTitle').textContent = 'Thêm Khách Thuê';
+            tModalInstance.show();
+        }
+
+        function editTenant(idx) {
+            const t = filteredTenants[idx];
+            document.getElementById('editId').value = t.idNguoiThue;
+            document.getElementById('name').value = t.HoTen;
+            document.getElementById('gender').value = t.GioiTinh || 'Nam';
+            document.getElementById('phone').value = t.SoDT;
+            document.getElementById('cccd').value = t.CCCD || '';
+            document.getElementById('hometown').value = t.QueQuan || '';
+            document.getElementById('email').value = t.Email || '';
+            document.getElementById('tenantModalTitle').textContent = 'Sửa Khách Thuê';
+            tModalInstance.show();
+        }
+
+        async function submitTenant() {
+            const id = document.getElementById('editId').value;
+            const data = {
+                HoTen: document.getElementById('name').value,
+                GioiTinh: document.getElementById('gender').value,
+                SoDT: document.getElementById('phone').value,
+                CCCD: document.getElementById('cccd').value,
+                QueQuan: document.getElementById('hometown').value,
+                Email: document.getElementById('email').value,
+                QuocTich: 'Việt Nam'
+            };
+            if(!data.HoTen || !data.SoDT || !data.CCCD) { alert('Vui lòng điền đủ Họ tên, SĐT và CCCD!'); return; }
+            try {
+                const res = await fetch(`${API}/nguoithue${id ? '/'+id : ''}`, {
+                    method: id ? 'PUT' : 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(data)
+                });
+                if(res.ok) { 
+                    tModalInstance.hide(); 
+                    showToast(id ? 'Đã cập nhật thông tin khách thuê!' : 'Đã thêm khách thuê mới thành công!');
+                    loadData(); 
+                }
+                else { 
+                    const err = await res.json(); 
+                    showToast(err.error || 'Lỗi lưu dữ liệu', 'error'); 
+                }
+            } catch(e) { showToast('Lỗi kết nối máy chủ!', 'error'); }
+        }
+
+        // Action Thành Viên
+        function editMember(idx) {
+            const m = filteredMembers[idx];
+            document.getElementById('editMemberId').value = m.idThanhVien;
+            document.getElementById('mName').value = m.HoTen;
+            document.getElementById('mGender').value = m.GioiTinh || 'Nam';
+            document.getElementById('mPhone').value = m.SoDT || '';
+            document.getElementById('mCccd').value = m.CCCD || '';
+            document.getElementById('mEmail').value = m.Email || '';
+            document.getElementById('mHometown').value = m.QueQuan || '';
+            mModalInstance.show();
+        }
+
+        async function submitMember() {
+            const id = document.getElementById('editMemberId').value;
+            const data = {
+                HoTen: document.getElementById('mName').value,
+                GioiTinh: document.getElementById('mGender').value,
+                SoDT: document.getElementById('mPhone').value,
+                CCCD: document.getElementById('mCccd').value,
+                QueQuan: document.getElementById('mHometown').value,
+                Email: document.getElementById('mEmail').value,
+                QuocTich: 'Việt Nam'
+            };
+            try {
+                const res = await fetch(`${API}/members/${id}`, {
+                    method: 'PUT',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(data)
+                });
+                if(res.ok) { 
+                    mModalInstance.hide(); 
+                    showToast('Đã cập nhật thông tin thành viên!');
+                    loadData(); 
+                } else {
+                    showToast('Không thể cập nhật thành viên', 'error');
+                }
+            } catch(e) { showToast('Lỗi kết nối máy chủ!', 'error'); }
+        }
+
+        function deleteTenant(id) {
+            showConfirm('Xác nhận xóa khách thuê này?', async () => {
+                const res = await fetch(`${API}/nguoithue/${id}`, { method: 'DELETE' });
+                if(res.ok) {
+                    showToast('Đã xóa khách thuê thành công!');
+                    loadData(); 
+                } else {
+                    showToast('Khách có hợp đồng, không thể xóa!', 'error');
+                }
+            });
+        }
+
+        function deleteMember(id) {
+            showConfirm('Xóa thành viên này?', async () => {
+                const res = await fetch(`${API}/members/${id}`, { method: 'DELETE' });
+                if(res.ok) {
+                    showToast('Đã xóa thành viên khỏi phòng!');
+                    loadData();
+                } else {
+                    showToast('Lỗi khi xóa thành viên', 'error');
+                }
+            });
+        }
+
+        function logout() { localStorage.removeItem('user'); window.location.href = 'login.html'; }
+    </script>
+</body>
+</html>

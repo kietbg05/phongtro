@@ -1,0 +1,109 @@
+================================================================================
+TÓM TẮT KẾT QUẢ THỰC HIỆN ĐỒ ÁN
+================================================================================
+Đề tài: Hệ Thống Quản Lý Phòng Trọ (Hutech Room Management)
+
+I. TỔNG QUAN CÔNG NGHỆ SỬ DỤNG
+Dự án được xây dựng theo mô hình Client-Server hiện đại:
+- Giao diện (Frontend): HTML5/CSS3 (Glassmorphism), JavaScript (Vanilla), Bootstrap 5.
+- Máy chủ (Backend): Node.js & Express.
+- Cơ sở dữ liệu (Database): MySQL.
+
+II. CẤU TRÚC HỆ THỐNG DỮ LIỆU
+Hệ thống bao gồm các bảng dữ liệu chính: KhuTro, Phong, TaiKhoan, NguoiThue, HopDong, HoaDon.
+
+III. CÁC CHỨC NĂNG ĐÃ HOÀN THÀNH
+1. Hệ thống Đăng nhập & Bảo mật.
+2. Bảng điều khiển (Dashboard) thống kê trực quan với Chart.js.
+3. Quản lý Khu trọ & Phòng (Grid Card, Thêm/Sửa).
+4. Hệ thống Quản lý Cư dân (Tìm kiếm thông minh, Highlighting).
+5. Quản lý Hóa đơn & Tài chính.
+6. Hệ thống Thông báo Dynamic Island cao cấp.
+
+IV. GIẢI THÍCH CÁCH HOẠT ĐỘNG
+1. Frontend thu thập dữ liệu và gửi Request.
+2. Backend kiểm tra và kết nối MySQL.
+3. Database lưu dữ liệu vĩnh viễn.
+4. Phản hồi kết quả về giao diện ngay lập tức.
+
+V. ĐÁNH GIÁ KẾT QUẢ
+Hệ thống đáp ứng 80-90% yêu cầu đồ án Cơ sở ngành, chạy ổn định và thẩm mỹ cao.
+
+================================================================================
+BÁO CÁO CHI TIẾT (NỘI DUNG ĐẦY ĐỦ)
+================================================================================
+
+CHƯƠNG 1: GIỚI THIỆU ĐỀ TÀI VÀ MỤC TIÊU
+--------------------------------------------------------------------------------
+1.1. Lý do chọn đề tài
+Trong bối cảnh đô thị hóa phát triển, nhu cầu thuê nhà và phòng trọ tại các thành phố lớn như TP.HCM là rất cao. Tuy nhiên, việc quản lý theo phương pháp thủ công (ghi sổ sách, Excel rời rạc) gây ra nhiều khó khăn cho chủ trọ như: khó theo dõi công nợ, dễ nhầm lẫn thông tin khách thuê, và mất thời gian khi lập hóa đơn hàng tháng. Vì vậy, việc xây dựng một hệ thống quản lý tập trung trên nền tảng Web là vô cùng cần thiết.
+
+1.2. Mục tiêu của hệ thống
+- Tin học hóa quy trình quản lý từ khâu tiếp nhận khách đến khâu thanh toán.
+- Cung cấp giao diện trực quan, dễ sử dụng cho chủ trọ.
+- Đảm bảo tính chính xác của dữ liệu thông qua cơ sở dữ liệu tập trung (MySQL).
+- Tự động hóa các công việc lặp đi lặp lại như tạo tài khoản khách thuê và tính tiền phòng.
+
+CHƯƠNG 2: PHÂN TÍCH VÀ THIẾT KẾ CƠ SỞ DỮ LIỆU
+--------------------------------------------------------------------------------
+Hệ thống được thiết kế với các bảng dữ liệu có quan hệ chặt chẽ (Relational Database):
+
+2.1. Quản lý Hạ tầng (KhuTro & Phong)
+- Mỗi Khu trọ bao gồm nhiều Phòng.
+- Mỗi Phòng có thông tin về loại phòng, giá thuê và diện tích.
+
+2.2. Quản lý Con người (TaiKhoan & NguoiThue)
+- Mỗi người thuê nhà đều được cấp một tài khoản đăng nhập để bảo mật thông tin.
+- Hệ thống hỗ trợ phân quyền: Admin (Chủ nhà) và NguoiThue (Khách).
+
+2.3. Quản lý Giao dịch (HopDong & HoaDon)
+- Hợp đồng là cầu nối giữa Người thuê và Phòng, xác định thời hạn ở.
+- Hóa đơn được sinh ra hàng kỳ dựa trên thông tin hợp đồng để thu tiền nhà.
+
+CHƯƠNG 3: KIẾN TRÚC CÔNG NGHỆ VÀ GIAO DIỆN
+--------------------------------------------------------------------------------
+3.1. Frontend (Giao diện người dùng)
+- HTML5 & CSS3: Sử dụng các kỹ thuật thiết kế hiện đại như Glassmorphism (hiệu ứng kính) mang lại cảm giác cao cấp.
+- Bootstrap 5: Đảm bảo giao diện co giãn tốt trên mọi thiết bị (Responsive).
+- JavaScript (Fetch API): Thực hiện các cuộc gọi không đồng bộ (Asynchronous), tích hợp thuật toán chuẩn hóa chuỗi để tìm kiếm tiếng Việt không dấu và hệ thống Highlight kết quả tìm kiếm theo thời gian thực.
+- UI/UX: Áp dụng phong cách thiết kế cao cấp với Ghost Buttons, Glassmorphism và màu sắc độ tương phản cao cho chế độ Dark Mode.
+
+3.2. Backend (Xử lý máy chủ)
+- Node.js & Express Framework: Xử lý các luồng dữ liệu (API), xác thực người dùng và thực hiện các câu lệnh SQL.
+- MySQL: Lưu trữ dữ liệu an toàn, hỗ trợ truy vấn nhanh và nhất quán.
+
+CHƯƠNG 4: MÔ TẢ CÁC CHỨC NĂNG CHÍNH
+--------------------------------------------------------------------------------
+4.1. Trang Điều khiển (Dashboard)
+- Cung cấp cái nhìn tổng quát về tình trạng kinh doanh thông qua các biểu đồ số liệu: tổng phòng, phòng trống, doanh thu dự kiến trong tháng.
+
+4.2. Quản lý Khu trọ trực quan
+- Hiển thị các khu trọ dưới dạng Card (Thẻ), giúp chủ trọ dễ dàng bao quát nhiều chi nhánh hoặc nhiều tòa nhà khác nhau một cách trực quan.
+
+4.3. Quản lý Phòng và Khách thuê (Cư dân)
+- Chức năng thêm/sửa/xóa linh hoạt, tự động hóa việc tạo tài khoản cho khách thuê.
+- ĐẶC BIỆT: Hệ thống Tìm kiếm vạn năng có khả năng lọc đồng thời trên nhiều tab dữ liệu, tự động chuyển tab thông minh và đánh dấu (highlight) kết quả trùng khớp bằng màu sắc nổi bật.
+
+4.4. Hệ thống Thông báo Dynamic Island
+- Tích hợp thành phần giao diện lấy cảm hứng từ Dynamic Island của iOS, cung cấp phản hồi mượt mà cho các hành động Lưu, Cập nhật hoặc Xóa dữ liệu mà không làm gián đoạn trải nghiệm người dùng.
+
+4.4. Quy trình Hợp đồng và Hóa đơn
+- Quản lý vòng đời thuê phòng: Từ khi ký hợp đồng đến khi bắt đầu ở và thanh toán hàng tháng.
+- Hỗ trợ ghi thu tiền mặt và cập nhật trạng thái "Đã thanh toán" ngay trên hệ thống.
+
+CHƯƠNG 5: KẾT LUẬN VÀ HƯỚNG PHÁT TRIỂN
+--------------------------------------------------------------------------------
+5.1. Kết quả đạt được
+- Xây dựng thành công hệ thống quản lý phòng trọ hoàn thiện về mặt chức năng.
+- Giao diện đẹp, hiện đại, đạt tiêu chuẩn thẩm mỹ của đồ án chuyên ngành.
+- Code được tổ chức khoa học, dễ hiểu, phù hợp để trình bày và chấm điểm.
+
+5.2. Hướng phát triển tương lai
+- Tích hợp thanh toán online qua Momo/ZaloPay.
+- Xây dựng ứng dụng di động cho khách thuê để nhận thông báo hóa đơn và báo sự cố phòng.
+- Tích hợp biểu đồ thống kê chuyên sâu bằng Chart.js.
+
+================================================================================
+NGƯỜI THỰC HIỆN: [Tên của bạn]
+ĐỀ TÀI: QUẢN LÝ PHÒNG TRỌ VER 1.0
+================================================================================

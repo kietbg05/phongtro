@@ -1,0 +1,29 @@
+HƯỚNG DẪN CÀI ĐẶT VÀ SỬ DỤNG HỆ THỐNG QUẢN LÝ PHÒNG TRỌ
+
+Để chạy ứng dụng này trên máy tính mới, vui lòng thực hiện theo các bước sau:
+
+BƯỚC 1: CÀI ĐẶT CƠ SỞ DỮ LIỆU (MySQL)
+1. Mở XAMPP Control Panel và Start hai dịch vụ Apache và MySQL.
+2. Truy cập địa chỉ http://localhost/phpmyadmin trên trình duyệt.
+3. Nhấn "New" (Mới) để tạo cơ sở dữ liệu mới với tên chính xác là: QuanLyPhongTro
+4. Chọn cơ sở dữ liệu "QuanLyPhongTro" vừa tạo, chọn thẻ "Import" (Nhập).
+5. Chọn tệp tin: database/full_export_CCCD_final.sql
+6. Nhấn "Import" (Nhập) và đợi thông báo thành công.
+
+BƯỚC 2: KHỞI ĐỘNG ỨNG DỤNG
+1. Quay lại thư mục chính của dự án.
+2. Nhấp đúp chuột vào tệp tin: CHAY_UNG_DUNG.bat
+3. Giữ nguyên cửa sổ Command Prompt vừa hiện ra (không được tắt).
+
+BƯỚC 3: TRUY CẬP HỆ THỐNG
+1. Mở trình duyệt và truy cập địa chỉ: http://localhost:3000/login.html
+2. Đăng nhập với tài khoản:
+   - Tài khoản: admin
+   - Mật khẩu: 123 (mặc định)
+
+---
+LƯU Ý: 
+- Thông tin khách thuê đã có thêm trường CCCD để phục vụ lập hợp đồng.
+- Mục "Dịch vụ/Phí" trong Menu trái cho phép định nghĩa các loại phí thu thêm (Rác, Internet, Vệ sinh...).
+- Khi lập hóa đơn (thủ công hoặc chốt hàng loạt), hệ thống sẽ tự động tính toán các phí này dựa trên cấu hình (Theo phòng hoặc Theo người).
+- Các hóa đơn sẽ hiển thị bảng kê chi tiết dịch vụ khi nhấn nút "In hóa đơn".

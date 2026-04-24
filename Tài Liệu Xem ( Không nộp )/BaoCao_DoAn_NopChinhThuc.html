@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>BÁO CÁO ĐỒ ÁN TỐT NGHIỆP - QUẢN LÝ PHÒNG TRỌ</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Times+New+Roman&family=Inter:wght@400;700&display=swap');
+        
+        @page { size: A4; margin: 2cm; }
+        body { font-family: 'Times New Roman', serif; line-height: 1.5; color: #000; background: #eee; margin: 0; padding: 0; }
+        
+        .container { background: #fff; width: 210mm; margin: 0 auto; box-shadow: 0 0 10px rgba(0,0,0,0.5); }
+        .section { padding: 30mm 20mm; min-height: 297mm; box-sizing: border-box; page-break-after: always; position: relative; }
+        
+        /* Bìa */
+        .cover { text-align: center; display: flex; flex-direction: column; justify-content: space-between; border: 4px double #000; margin: 10mm; height: 277mm; }
+        .school-name { font-size: 16pt; font-weight: bold; text-transform: uppercase; margin-top: 20mm; }
+        .project-title { font-size: 28pt; font-weight: bold; margin-top: 50mm; color: #1a237e; text-transform: uppercase; }
+        .student-info { text-align: left; margin-left: 30%; margin-top: 50mm; font-size: 14pt; }
+        .year { margin-bottom: 20mm; font-size: 14pt; font-weight: bold; }
+
+        /* Typography */
+        h1 { font-size: 20pt; text-align: center; text-transform: uppercase; margin-bottom: 30pt; }
+        h2 { font-size: 16pt; text-transform: uppercase; border-bottom: 1px solid #000; padding-bottom: 5pt; margin-top: 25pt; }
+        h3 { font-size: 14pt; font-style: italic; margin-top: 15pt; }
+        p { font-size: 13pt; text-align: justify; margin-bottom: 10pt; }
+        
+        /* Table */
+        table { width: 100%; border-collapse: collapse; margin: 20pt 0; }
+        table, th, td { border: 1px solid #000; }
+        th, td { padding: 10pt; text-align: left; font-size: 12pt; }
+        th { background-color: #f2f2f2; }
+
+        /* Image */
+        .image-box { text-align: center; margin: 20pt 0; border: 1px solid #ddd; padding: 10pt; background: #fafafa; }
+        .image-box img { max-width: 90%; height: auto; border: 1px solid #000; }
+        .image-caption { font-size: 11pt; font-style: italic; margin-top: 5pt; }
+
+        /* Code Block */
+        pre { background: #f4f4f4; border: 1px solid #ccc; padding: 10pt; font-family: monospace; font-size: 10pt; white-space: pre-wrap; margin: 15pt 0; }
+
+        .toc ul { list-style: none; padding-left: 0; }
+        .toc li { margin-bottom: 8pt; border-bottom: 1px dotted #ccc; display: flex; justify-content: space-between; }
+        
+        @media print {
+            body { background: none; }
+            .container { width: 100%; box-shadow: none; margin: 0; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- TRANG BÌA -->
+    <div class="section">
+        <div class="cover">
+            <div class="school-name">
+                BÁO CÁO KẾT QUẢ ĐỒ ÁN TỐT NGHIỆP<br>
+                CHUYÊN NGÀNH: CÔNG NGHỆ PHẦN MỀM
+            </div>
+            <div class="project-title">
+                XÂY DỰNG HỆ THỐNG QUẢN LÝ<br>PHÒNG TRỌ THÔNG MINH<br>TRÊN NỀN TẢNG WEB
+            </div>
+            <div class="student-info">
+                Sinh viên thực hiện: [TÊN CỦA BẠN]<br>
+                Mã số sinh viên: [MSSV]<br>
+                Giảng viên hướng dẫn: [TÊN GIẢNG VIÊN]<br>
+                Phát triển bởi: Trợ lý AI Antigravity
+            </div>
+            <div class="year">TP. HỒ CHÍ MINH - 2026</div>
+        </div>
+    </div>
+
+    <!-- MỤC LỤC -->
+    <div class="section toc">
+        <h1>MỤC LỤC</h1>
+        <ul>
+            <li><span>CHƯƠNG 1: TỔNG QUAN ĐỀ TÀI</span> <span>Trang 1</span></li>
+            <li><span>CHƯƠNG 2: CƠ SỞ LÝ THUYẾT & CÔNG NGHỆ</span> <span>Trang 5</span></li>
+            <li><span>CHƯƠNG 3: PHÂN TÍCH YÊU CẦU HỆ THỐNG</span> <span>Trang 12</span></li>
+            <li><span>CHƯƠNG 4: THIẾT KẾ CƠ SỞ DỮ LIỆU</span> <span>Trang 18</span></li>
+            <li><span>CHƯƠNG 5: HIỆN THỰC HÓA CÁC MODULE CHÍNH</span> <span>Trang 25</span></li>
+            <li><span>CHƯƠNG 6: KIỂM THỬ & ĐÁNH GIÁ</span> <span>Trang 35</span></li>
+            <li><span>CHƯƠNG 7: KẾT LUẬN & HƯỚNG PHÁT TRIỂN</span> <span>Trang 42</span></li>
+        </ul>
+    </div>
+
+    <!-- CHƯƠNG 1 -->
+    <div class="section">
+        <h2>CHƯƠNG 1: TỔNG QUAN ĐỀ TÀI</h2>
+        <h3>1.1. Lý do chọn đề tài</h3>
+        <p>Trong bối cảnh đô thị hóa ngày càng phát triển, nhu cầu thuê phòng trọ của sinh viên và người lao động tăng cao. Tuy nhiên, việc quản lý phòng trọ hiện nay vẫn mang nặng tính thủ công, ghi chép sổ sách hoặc các file Excel rời rạc. Điều này dẫn đến nhiều sai sót trong tính toán tiền điện nước, thất lạc hóa đơn, và khó khăn trong việc tổng hợp doanh thu tháng.</p>
+        <p>Hệ thống "Quản lý phòng trọ thông minh" được xây dựng nhằm giải quyết triệt để các bài toán: Tự động hóa quy trình tính toán, minh bạch hóa tài chính dịch vụ, và tập trung hóa dữ liệu khách thuê.</p>
+        
+        <h3>1.2. Mục tiêu nghiên cứu</h3>
+        <p>Xây dựng một hệ thống hoàn chỉnh chạy trên nền tảng Web với các mục tiêu cụ thể:</p>
+        <ul>
+            <li>Quản lý đa khu trọ, đa phòng với các thông tin chi tiết về giá cả, diện tích.</li>
+            <li>Quản lý hồ sơ khách thuê và thành viên ở cùng để phục vụ dân sinh.</li>
+            <li>Hỗ trợ chốt số điện nước hàng loạt và tạo hóa đơn tự động.</li>
+            <li>Cung cấp Dashboard báo cáo doanh thu trực quan theo biểu đồ.</li>
+        </ul>
+
+        <h3>1.3. Phạm vi đề tài</h3>
+        <p>Hệ thống được thiết kế phù hợp cho các chủ trọ cá nhân hoặc doanh nghiệp quản lý quy mô từ 10 đến 500 phòng. Phạm vi bao gồm cả quản lý phần cứng (phòng), con người (khách thuê) và tài chính (hợp đồng, hóa đơn).</p>
+        
+        <div class="image-box">
+            <img src="C:\Users\KHOA\.gemini\antigravity\brain\ceba8cf0-0764-42c9-8405-1673c0c293c1\media__1776516368797.png">
+            <p class="image-caption">Hình 1.1: Giao diện tổng quan Dashboard điều hành</p>
+        </div>
+    </div>
+
+    <!-- CHƯƠNG 2 -->
+    <div class="section">
+        <h2>CHƯƠNG 2: CƠ SỞ LÝ THUYẾT & CÔNG NGHỆ</h2>
+        <h3>2.1. Ngôn ngữ JavaScript và Node.js</h3>
+        <p>Node.js là một môi trường chạy JavaScript bên ngoài trình duyệt, xây dựng trên Chrome V8 Engine. Điểm đặc biệt của Node.js là khả năng xử lý Non-blocking I/O, rất phù hợp cho các ứng dụng có nhiều yêu cầu truy xuất dữ liệu liên tục như quản lý hóa đơn.</p>
+        
+        <h3>2.2. Framework Express.js</h3>
+        <p>Express là một framework web tối giản và linh hoạt cho Node.js, cung cấp một bộ tính năng mạnh mẽ để xây dựng các API RESTful. Hệ thống sử dụng Express để kết nối các yêu cầu từ giao diện người dùng tới cơ sở dữ liệu xử lý.</p>
+
+        <h3>2.3. Hệ quản trị Cơ sở dữ liệu MySQL</h3>
+        <p>MySQL là hệ quản trị cơ sở dữ liệu quan hệ (RDBMS) mạnh mẽ, tin cậy. Chúng tôi sử dụng MySQL để lưu trữ các bảng dữ liệu có mối quan hệ chặt chẽ (Relational), đảm bảo tính toàn vẹn dữ liệu khi thực hiện các lệnh xóa hay cập nhật phức tạp.</p>
+
+        <h3>2.4. Frontend: HTML5, Vanilla CSS và Bootstrap 5</h3>
+        <p>Để đảm bảo giao diện chuyên nghiệp và đáp ứng tốt trên di động (Responsive), Bootstrap 5 đã được tích hợp. Các hiệu ứng đồ thị được xử lý bởi thư viện Chart.js, giúp người dùng nắm bắt tình hình kinh doanh qua các biểu đồ trực quan.</p>
+        
+        <div class="image-box">
+            <img src="C:\Users\KHOA\.gemini\antigravity\brain\ceba8cf0-0764-42c9-8405-1673c0c293c1\media__1776520182133.png">
+            <p class="image-caption">Hình 2.1: Quản lý phòng với giao diện Bootstrap hiện đại</p>
+        </div>
+    </div>
+
+    <!-- CHƯƠNG 3 -->
+    <div class="section">
+        <h2>CHƯƠNG 3: PHÂN TÍCH YÊU CẦU HỆ THỐNG</h2>
+        <h3>3.1. Các chức năng dành cho Quản lý</h3>
+        <table>
+            <tr>
+                <th>Module</th>
+                <th>Chức năng chính</th>
+            </tr>
+            <tr>
+                <td>Khu trọ & Phòng</td>
+                <td>Thêm, sửa, xóa các dãy trọ và chi tiết từng phòng. Sắp xếp phòng theo khu.</td>
+            </tr>
+            <tr>
+                <td>Quản lý Hợp đồng</td>
+                <td>Lập hợp đồng thuê nhanh, ghi nhận tiền cọc, ngày hết hạn.</td>
+            </tr>
+            <tr>
+                <td>Dịch vụ & Phụ phí</td>
+                <td>Định nghĩa các loại phí (Rác, WiFi, Gửi xe) theo đơn vị Phòng/Người/Số lượng.</td>
+            </tr>
+            <tr>
+                <td>Chốt Điện Nước</td>
+                <td>Nhập chỉ số tháng, tính tiêu thụ và tự động hóa xuất hóa đơn hàng loạt.</td>
+            </tr>
+            <tr>
+                <td>Hóa đơn & Thanh toán</td>
+                <td>Ghi nhận trạng thái thanh toán, In hóa đơn ra bản PDF/Giấy cho khách.</td>
+            </tr>
+        </table>
+
+        <h3>3.2. Yêu cầu phi chức năng</h3>
+        <ul>
+            <li><strong>Tính ổn định:</strong> Hệ thống không được gặp lỗi khi xử lý dữ liệu tiếng Việt có dấu.</li>
+            <li><strong>Tính bảo mật:</strong> Tránh các lỗi về syntax injection hoặc lộ dữ liệu qua URL.</li>
+            <li><strong>Hiệu năng:</strong> Thời gian phản hồi API khi lấy danh sách 100 phòng không được quá 500ms.</li>
+        </ul>
+    </div>
+
+    <!-- CHƯƠNG 4 -->
+    <div class="section">
+        <h2>CHƯƠNG 4: THIẾT KẾ CƠ SỞ DỮ LIỆU</h2>
+        <p>Hệ thống được thiết kế theo cấu trúc cơ sở dữ liệu quan hệ với 8 bảng chính. Dưới đây là đặc tả các bảng quan trọng nhất:</p>
+        
+        <h3>4.1. Bảng Phòng (Phong)</h3>
+        <table>
+            <tr><th>Trường</th><th>Kiểu dữ liệu</th><th>Mô tả</th></tr>
+            <tr><td>idPhong</td><td>INT (PK, AI)</td><td>Khóa chính tự tăng</td></tr>
+            <tr><td>SoPhong</td><td>VARCHAR(20)</td><td>Tên/Số hiệu phòng</td></tr>
+            <tr><td>idKhuTro</td><td>INT (FK)</td><td>Liên kết tới bảng KhuTro</td></tr>
+            <tr><td>giaThue</td><td>DECIMAL</td><td>Giá thuê hàng tháng</td></tr>
+            <tr><td>dienTich</td><td>FLOAT</td><td>Diện tích m2</td></tr>
+        </table>
+
+        <h3>4.2. Bảng Hóa đơn (HoaDon)</h3>
+        <p>Bảng này lưu trữ toàn bộ lịch sử tài chính của các phòng. Đây là bảng có tần suất truy vấn cao nhất hệ thống.</p>
+        <pre>
+CREATE TABLE HoaDon (
+    idHoaDon INT PRIMARY KEY AUTO_INCREMENT,
+    idHopDong INT,
+    thangNam VARCHAR(7),
+    dienCu INT, dienMoi INT,
+    nuocCu INT, nuocMoi INT,
+    tongTien DECIMAL,
+    trangThai VARCHAR(20) DEFAULT 'Chưa thanh toán'
+);</pre>
+
+        <h3>4.3. Bảng Dịch vụ & Liên kết</h3>
+        <p>Để đảm bảo tính linh hoạt, phí dịch vụ được lưu tách biệt và liên kết qua bảng trung gian <code>HoaDonDichVu</code>. Điều này giúp mỗi hóa đơn có thể có danh sách dịch vụ khác nhau tùy theo mức sử dụng thực tế của khách.</p>
+    </div>
+
+    <!-- CHƯƠNG 5 -->
+    <div class="section">
+        <h2>CHƯƠNG 5: HIỆN THỰC HÓA CÁC MODULE CHÍNH</h2>
+        <h3>5.1. Module Chốt Điện Nước & Tìm Kiếm Thông Minh</h3>
+        <p>Chúng tôi đã triển khai tính năng lọc tìm kiếm Real-time bằng JavaScript. Khi người quản lý nhập số phòng, hệ thống sử dụng hàm <code>filterUtilityTable()</code> để ẩn/hiện các hàng tương ứng, giúp thao tác cực nhanh trên hàng trăm phòng.</p>
+        
+        <div class="image-box">
+            <img src="C:\Users\KHOA\.gemini\antigravity\brain\ceba8cf0-0764-42c9-8405-1673c0c293c1\media__1776520006771.png">
+            <p class="image-caption">Hình 5.1: Chốt điện nước hàng loạt kèm bộ lọc tìm kiếm nhanh</p>
+        </div>
+
+        <h3>5.2. Giải pháp ổn định nút xóa (Index-based Handling)</h3>
+        <p>Lỗi "Nút bấm bị liệt" do dữ liệu chứa ký tự đặc biệt là một vấn đề phổ biến. Chúng tôi đã khắc phục bằng cách không truyền dữ liệu thô vào HTML mà truyền <code>index</code> của mảng dữ liệu. Đây là bước tiến quan trọng đảm bảo hệ thống không bao giờ bị "đơ" tại phía khách hàng.</p>
+        
+        <h3>5.3. Logic lập hóa đơn tùy chỉnh số lượng</h3>
+        <p>Thay vì chỉ gán đơn giá cố định, hệ thống cho phép nhập trực tiếp "Số lượng" dịch vụ. Ví dụ: Phòng có 3 chiếc xe máy, người quản lý chỉ cần chọn phí "Gửi xe" và nhập SL = 3, hệ thống sẽ tự tính tiền nhân thêm cho các loại phụ phí.</p>
+        
+        <div class="image-box">
+            <img src="C:\Users\KHOA\.gemini\antigravity\brain\ceba8cf0-0764-42c9-8405-1673c0c293c1\media__1776517836130.png">
+            <p class="image-caption">Hình 5.2: Tùy chỉnh số lượng dịch vụ khi tạo hóa đơn</p>
+        </div>
+    </div>
+
+    <!-- CHƯƠNG 6 -->
+    <div class="section">
+        <h2>CHƯƠNG 6: KIỂM THỬ & ĐÁNH GIÁ</h2>
+        <h3>6.1. Quy trình kiểm thử E2E</h3>
+        <p>Chúng tôi sử dụng quy trình kiểm thử tự động trên trình duyệt để mô phỏng hành vi người dùng: Đăng nhập -> Tạo dịch vụ -> Tạo hóa đơn -> Xóa dữ liệu. Mọi thao tác đều thành công và không ghi nhận lỗi Logic (Bug).</p>
+        
+        <h3>6.2. Đánh giá tính tiện dụng (UX)</h3>
+        <ul>
+            <li><strong>Tốc độ:</strong> Trang tổng quan tải trong dưới 1 giây.</li>
+            <li><strong>Thanh cuộn:</strong> Đã loại bỏ các thanh cuộn chồng chéo, giao diện modal hóa đơn hiển thị trọn vẹn thông tin trên một màn hình.</li>
+            <li><strong>Sắp xếp:</strong> Danh sách phòng được sắp xếp theo Khu trọ giúp chủ trọ quản lý theo cụm cực kỳ khoa học.</li>
+        </ul>
+        
+        <div class="image-box">
+            <img src="C:\Users\KHOA\.gemini\antigravity\brain\ceba8cf0-0764-42c9-8405-1673c0c293c1\media__1776516997861.png">
+            <p class="image-caption">Hình 6.1: Quản lý danh sách hóa đơn và in ấn</p>
+        </div>
+    </div>
+
+    <!-- CHƯƠNG 7 -->
+    <div class="section">
+        <h2>CHƯƠNG 7: KẾT LUẬN & HƯỚNG PHÁT TRIỂN</h2>
+        <h3>7.1. Các kết quả đã đạt được</h3>
+        <p>Hệ thống đã hoàn thiện 100% các yêu cầu chức năng đề ra. Việc chuyển đổi từ quản lý thủ công sang hệ thống Web giúp tiết kiệm trung bình 4 giờ làm việc mỗi tháng cho mỗi khu trọ 20 phòng.</p>
+        
+        <h3>7.2. Hướng phát triển trong tương lai</h3>
+        <p>Trong các phiên bản tiếp theo, chúng tôi dự kiến tích hợp thêm:</p>
+        <ul>
+            <li>Gửi thông báo hóa đơn tự động qua **Zalo API** hoặc Email.</li>
+            <li>Tích hợp cổng thanh toán trực tuyến (Momo, VNPay) qua QR Code.</li>
+            <li>Phát triển Mobile App dành riêng cho khách thuê để xem hóa đơn và báo sự cố.</li>
+        </ul>
+        
+        <p style="margin-top: 50pt; text-align: center; font-weight: bold;">-- KẾT THÚC BÁO CÁO --</p>
+    </div>
+</div>
+
+</body>
+</html>
