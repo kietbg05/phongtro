@@ -8,94 +8,22 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
-    <style>
-        :root { --bg-darker: #0f172a; --card-bg: #1e293b; --accent: #38bdf8; --input-bg: #0b1120; }
-        body { font-family: 'Inter', sans-serif; background-color: var(--bg-darker); color: #e2e8f0; }
-        .card { background-color: var(--card-bg); border: 1px solid rgba(255,255,255,0.05); }
-        .table { color: #cbd5e1; }
-        .table thead th { background-color: rgba(255,255,255,0.02); color: #94a3b8; font-weight: 600; text-transform: uppercase; font-size: 0.75rem; border: none; }
-        .table td { border-color: rgba(255,255,255,0.05); vertical-align: middle; }
-        .nav-tabs .nav-link { border: none; color: #64748b; font-weight: 600; padding: 1rem 1.5rem; transition: 0.3s; }
-        .nav-tabs .nav-link.active { background: transparent; color: var(--accent); border-bottom: 2px solid var(--accent); }
-        
-        /* Modal & Form Fix */
-        .modal-content { background-color: var(--card-bg) !important; border: 1px solid var(--accent) !important; box-shadow: 0 0 20px rgba(56, 189, 248, 0.2); }
-        .modal-header { border-bottom: 1px solid rgba(56, 189, 248, 0.2); background: rgba(56, 189, 248, 0.05); }
-        .form-control, .form-select { 
-            background-color: var(--input-bg) !important; 
-            border: 1px solid rgba(255,255,255,0.1) !important; 
-            color: #fff !important; 
-        }
-        .form-control:focus, .form-select:focus { 
-            border-color: var(--accent) !important; 
-            box-shadow: 0 0 0 0.25rem rgba(56, 189, 248, 0.1) !important;
-            background-color: var(--input-bg) !important;
-        }
-        .form-label { color: var(--accent); font-weight: 600; font-size: 0.8rem; margin-bottom: 0.4rem; }
-        .btn-primary { background-color: var(--accent); border: none; color: #000; font-weight: 700; transition: 0.3s; }
-        .btn-primary:hover { background-color: #7dd3fc; transform: translateY(-1px); }
-        .modal-footer { border-top: 1px solid rgba(255,255,255,0.05); }
-        
-        .badge.bg-pink { background-color: #ec4899 !important; color: white; }
-
-        /* Dynamic Island Notification */
-        .island-container {
-            position: fixed; top: 15px; left: 50%; transform: translateX(-50%);
-            z-index: 10000; pointer-events: none;
-        }
-        .dynamic-island {
-            background: #000; color: white;
-            min-width: 120px; height: 35px; border-radius: 20px;
-            display: flex; align-items: center; justify-content: center;
-            padding: 0 15px; overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            transition: all 0.6s cubic-bezier(0.18, 0.89, 0.32, 1.28);
-            opacity: 0; transform: scale(0.8) translateY(-20px);
-            border: 1px solid rgba(255,255,255,0.1);
-        }
-        .dynamic-island.active {
-            opacity: 1; transform: scale(1) translateY(0);
-            min-width: 300px; height: 50px; border-radius: 25px;
-        }
-        .island-content {
-            display: flex; align-items: center; white-space: nowrap;
-            opacity: 0; transition: opacity 0.3s 0.2s;
-        }
-        .dynamic-island.active .island-content { opacity: 1; }
-        .island-icon { margin-right: 12px; font-size: 1.2rem; }
-        .island-text { font-size: 0.9rem; font-weight: 600; }
-
-        /* Nâng cấp độ sáng cho Placeholder */
-        input::placeholder, textarea::placeholder {
-            color: rgba(255, 255, 255, 0.45) !important;
-        }
-        .form-control:focus::placeholder {
-            color: rgba(255, 255, 255, 0.2) !important;
-        }
-
-        /* Nút Hủy Bỏ Hiện Đại */
-        .btn-cancel {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            color: rgba(255, 255, 255, 0.6) !important;
-            transition: all 0.3s ease;
-            font-weight: 500;
-            padding: 8px 20px;
-            border-radius: 8px;
-        }
-        .btn-cancel:hover {
-            background: rgba(255, 255, 255, 0.1);
-            border-color: rgba(255, 255, 255, 0.3);
-            color: #fff !important;
-            transform: translateY(-1px);
-        }
-    </style>
+    <script src="js/theme.js"></script>
+    <script src="js/toast.js"></script>
 </head>
 <body>
+    <!-- Honeypot to trick browser autofill -->
+    <div style="position: fixed; top: -1000px; left: -1000px; opacity: 0; pointer-events: none;">
+        <input type="text" name="username" tabindex="-1">
+        <input type="password" name="password" tabindex="-1">
+    </div>
     <div class="wrapper d-flex">
-        <nav id="sidebar">
-            <div class="sidebar-header"><i class="fas fa-home-user me-2"></i> QUẢN LÝ PHÒNG</div>
-            <ul class="list-unstyled components">
+                <nav id="sidebar">
+            <div class="sidebar-header">
+                <i class="fas fa-house-user me-2"></i> QUẢN LÝ PHÒNG
+            </div>
+
+            <ul class="list-unstyled components mb-0">
                 <li><a href="index.html"><i class="fas fa-tachometer-alt me-2"></i> Tổng quan</a></li>
                 <li><a href="areas.html"><i class="fas fa-building me-2"></i> Khu trọ</a></li>
                 <li><a href="rooms.html"><i class="fas fa-door-open me-2"></i> Phòng trọ</a></li>
@@ -104,43 +32,76 @@
                 <li><a href="services.html"><i class="fas fa-concierge-bell me-2"></i> Dịch vụ/Phí</a></li>
                 <li><a href="contracts.html"><i class="fas fa-file-contract me-2"></i> Hợp đồng</a></li>
                 <li><a href="invoices.html"><i class="fas fa-file-invoice-dollar me-2"></i> Hóa đơn</a></li>
-                <li><a href="#" onclick="logout()"><i class="fas fa-sign-out-alt me-2"></i> Đăng xuất</a></li>
+                <li><a href="admin_baocao.html"><i class="fas fa-tools me-2"></i> Hệ thống hỗ trợ</a></li>
+            </ul>
+        
+            <ul class="list-unstyled mt-auto border-top border-secondary pt-3" style="border-color: var(--glass-border) !important;">
+                <li>
+                    <a href="#" id="theme-toggle" class="d-flex align-items-center justify-content-between text-decoration-none">
+                        <span><i class="fas fa-adjust me-2"></i> Giao diện</span>
+                        <i class="fas fa-sun" id="theme-icon"></i>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" data-bs-toggle="modal" data-bs-target="#changePasswordModal"><i class="fas fa-key me-2"></i> Đổi mật khẩu</a>
+                </li>
+                <li>
+                    <a href="login.html" onclick="localStorage.removeItem('user')"><i class="fas fa-sign-out-alt me-2 text-danger"></i> <span class="text-danger">Đăng xuất</span></a>
+                </li>
             </ul>
         </nav>
 
-        <div id="content" class="p-4 w-100">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h2 class="fw-bold fs-4">Quản Lý Cư Dân</h2>
-                <div class="d-flex gap-2">
-                    <input type="text" id="searchInput" class="form-control bg-dark text-white border-secondary" placeholder="Tìm theo tên, SĐT, Phòng..." style="width:300px">
-                    <button class="btn btn-primary px-4" onclick="openAddTenant()"><i class="fas fa-plus me-2"></i>Thêm Khách</button>
+        <!-- Page Content -->
+        <div id="content">
+            <header class="d-flex justify-content-between align-items-center mb-5">
+                <div>
+                    <h2 class="animate-bento" style="font-family: var(--font-display); font-weight: 700;">Quản Lý Cư Dân</h2>
+                    <p class="text-secondary small">Theo dõi danh sách khách thuê và thành viên ở cùng.</p>
                 </div>
-            </div>
+                <div class="user-info d-flex align-items-center gap-3">
+                    <div class="input-group input-group-sm premium-search-group" style="width: 320px;">
+                        <span class="input-group-text border-0 bg-transparent"><i class="fas fa-search text-secondary"></i></span>
+                        <input type="text" id="q_resident_search" name="q_resident_search" class="form-control border-0 bg-transparent" placeholder="Tìm tên, phòng, SĐT..." autocomplete="off" spellcheck="false" readonly onfocus="this.removeAttribute('readonly');">
+                    </div>
+                    <button class="btn btn-primary" onclick="openAddTenant()">
+                        <i class="fas fa-plus me-2"></i> Thêm Khách
+                    </button>
+                </div>
+            </header>
 
-            <!-- Stats -->
-            <div class="row g-3 mb-4">
-                <div class="col-md-4">
-                    <div class="card p-3 shadow-sm border-0">
-                        <div class="d-flex align-items-center">
-                            <div class="bg-primary bg-opacity-10 p-3 rounded-3 me-3 text-primary"><i class="fas fa-users fa-lg"></i></div>
-                            <div><div class="small text-secondary">Tổng cư dân</div><h3 class="fw-bold mb-0" id="statTotal">0</h3></div>
-                        </div>
+            <!-- Bento Stats -->
+            <div class="bento-grid mb-5">
+                <div class="card stat-card animate-bento" style="animation-delay: 0.1s;">
+                    <div>
+                        <div class="stat-label">Tổng cư dân</div>
+                        <div class="stat-value text-indigo" id="statTotal">0</div>
                     </div>
+                    <div class="icon-circle icon-indigo"><i class="fas fa-users"></i></div>
                 </div>
-                <div class="col-md-4">
-                    <div class="card p-3 shadow-sm border-0">
-                        <div class="d-flex align-items-center">
-                            <div class="bg-info bg-opacity-10 p-3 rounded-3 me-3 text-info"><i class="fas fa-user-tie fa-lg"></i></div>
-                            <div><div class="small text-secondary">Chủ hộ đang ở</div><h3 class="fw-bold mb-0" id="statTenants">0</h3></div>
-                        </div>
+                <div class="card stat-card animate-bento" style="animation-delay: 0.2s;">
+                    <div>
+                        <div class="stat-label">Chủ hộ</div>
+                        <div class="stat-value text-emerald" id="statTenants">0</div>
                     </div>
+                    <div class="icon-circle icon-emerald"><i class="fas fa-user-tie"></i></div>
                 </div>
-                <div class="col-md-4">
-                    <div class="card p-3 shadow-sm border-0">
-                        <div class="d-flex align-items-center">
-                            <div class="bg-success bg-opacity-10 p-3 rounded-3 me-3 text-success"><i class="fas fa-user-friends fa-lg"></i></div>
-                            <div><div class="small text-secondary">Thành viên ở cùng</div><h3 class="fw-bold mb-0" id="statMembers">0</h3></div>
-                        </div>
+                <div class="card stat-card animate-bento" style="animation-delay: 0.3s;">
+                    <div>
+                        <div class="stat-label">Thành viên</div>
+                        <div class="stat-value text-amber" id="statMembers">0</div>
+                    </div>
+                    <div class="icon-circle icon-amber"><i class="fas fa-user-friends"></i></div>
+                </div>
+                <div class="card animate-bento" style="animation-delay: 0.4s;">
+                    <div class="stat-label">Bộ lọc khu vực</div>
+                    <div class="dropdown w-100 mt-2">
+                        <button class="form-select text-start d-flex align-items-center justify-content-between" type="button" id="areaDropdown" data-bs-toggle="dropdown">
+                            <span id="selectedAreaText">Tất cả khu trọ</span>
+                        </button>
+                        <ul class="dropdown-menu w-100 shadow-lg" id="areaDropdownMenu">
+                            <li><a class="dropdown-item" href="javascript:void(0)" onclick="setAreaFilter('', 'Tất cả khu trọ')">Tất cả khu trọ</a></li>
+                        </ul>
+                        <input type="hidden" id="filterArea" value="" onchange="applyFilters()">
                     </div>
                 </div>
             </div>
@@ -149,12 +110,6 @@
                 <div id="dynamicIsland" class="dynamic-island">
                     <div class="island-content" id="islandContent"></div>
                 </div>
-            </div>
-
-            <div class="mb-3">
-                <select id="filterArea" class="form-select bg-dark text-white border-secondary w-auto" onchange="applyFilters()">
-                    <option value="">Tất cả khu trọ</option>
-                </select>
             </div>
 
             <ul class="nav nav-tabs mb-0">
@@ -219,8 +174,8 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content shadow-lg">
                 <div class="modal-header">
-                    <h5 class="modal-title fw-bold text-white"><i class="fas fa-user-edit me-2 text-primary"></i> <span id="tenantModalTitle">Khách Thuê</span></h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    <h5 class="modal-title fw-bold"><i class="fas fa-user-edit me-2 text-primary"></i> <span id="tenantModalTitle">Khách Thuê</span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body p-4">
                     <form id="tenantForm">
@@ -270,8 +225,8 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content shadow-lg" style="border-color: #10b981 !important;">
                 <div class="modal-header" style="background: rgba(16, 185, 129, 0.05);">
-                    <h5 class="modal-title fw-bold text-white"><i class="fas fa-user-friends me-2 text-success"></i> SỬA THÀNH VIÊN</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    <h5 class="modal-title fw-bold"><i class="fas fa-user-friends me-2 text-success"></i> SỬA THÀNH VIÊN</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body p-4">
                     <form id="memberForm">
@@ -316,6 +271,35 @@
         </div>
     </div>
 
+    <!-- Modal gửi SMS -->
+    <div class="modal fade" id="smsModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content shadow-lg">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold"><i class="fas fa-sms me-2 text-primary"></i> Gửi SMS</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label">KHÁCH THUÊ</label>
+                        <div class="form-control bg-transparent" id="smsTenantInfo">---</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">NỘI DUNG TIN NHẮN *</label>
+                        <textarea class="form-control" id="smsMessage" rows="5" placeholder="Nhập nội dung SMS cần gửi..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-cancel" data-bs-dismiss="modal">Hủy bỏ</button>
+                    <button type="button" class="btn btn-primary px-4" id="btnSendSms" onclick="submitSms()">GỬI SMS</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    
+                
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="js/confirm-modal.js"></script>
     <script>
@@ -324,49 +308,57 @@
         let members = [];
         let filteredTenants = [];
         let filteredMembers = [];
+        let smsModalInstance = null;
+        let selectedSmsTenant = null;
 
-        function showToast(msg, type = 'success') {
-            const island = document.getElementById('dynamicIsland');
-            const content = document.getElementById('islandContent');
-            const color = type === 'success' ? '#10b981' : '#ef4444';
-            const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-triangle';
-
-            content.innerHTML = `
-                <i class="fas ${icon} island-icon" style="color: ${color}"></i>
-                <span class="island-text text-white">${msg}</span>
-            `;
-
-            island.classList.add('active');
-            
-            setTimeout(() => {
-                island.classList.remove('active');
-            }, 3500);
-        }
-
-        // Khởi tạo các Modal để dùng chung (tránh lỗi z-index/multiple instance)
-        let tModalInstance, mModalInstance;
+        // showToast() is provided globally by js/toast.js
 
         document.addEventListener('DOMContentLoaded', () => {
             tModalInstance = new bootstrap.Modal(document.getElementById('tenantModal'));
             mModalInstance = new bootstrap.Modal(document.getElementById('memberModal'));
+            smsModalInstance = new bootstrap.Modal(document.getElementById('smsModal'));
             loadData();
             loadAreas();
             
-            document.getElementById('searchInput').addEventListener('input', applyFilters);
+            const q = document.getElementById('q_resident_search');
+            q.addEventListener('input', applyFilters);
+
+            // Double security: clear autofill if it persists
+            const clearAutofill = () => {
+                if (q.value.toLowerCase() === 'admin') {
+                    q.value = '';
+                    applyFilters();
+                }
+            };
+            setTimeout(clearAutofill, 300);
+            setTimeout(clearAutofill, 1000);
+            
+            // Prevent browser from treating this as a login field
+            q.addEventListener('focus', () => {
+                q.setAttribute('autocomplete', 'chrome-off-' + Math.random());
+            });
         });
 
         async function loadAreas() {
             try {
-                const res = await fetch(`${API}/khutro`);
+                const res = await fetch(`/api/khutro`);
                 const data = await res.json();
-                const select = document.getElementById('filterArea');
-                data.forEach(k => {
-                    const opt = document.createElement('option');
-                    opt.value = k.TenKhuTro; opt.textContent = k.TenKhuTro;
-                    select.appendChild(opt);
-                });
-            } catch (e) {}
+                const menu = document.getElementById('areaDropdownMenu');
+                if (menu && data.length > 0) {
+                    menu.innerHTML = `<li><a class="dropdown-item" href="javascript:void(0)" onclick="setAreaFilter('', 'Tất cả khu trọ')">Tất cả khu trọ</a></li>` +
+                        data.map(k => `<li><a class="dropdown-item" href="javascript:void(0)" onclick="setAreaFilter('${k.TenKhuTro || k.tenkhutro}', '${k.TenKhuTro || k.tenkhutro}')">${k.TenKhuTro || k.tenkhutro}</a></li>`).join('');
+                } else if (menu) {
+                    menu.innerHTML = `<li><a class="dropdown-item disabled" href="#">Không có dữ liệu</a></li>`;
+                }
+            } catch (e) { console.error('Lỗi load areas:', e); }
         }
+
+        function setAreaFilter(value, text) {
+            document.getElementById('filterArea').value = value;
+            document.getElementById('selectedAreaText').innerText = text;
+            applyFilters();
+        }
+
 
         async function loadData() {
             try {
@@ -377,7 +369,10 @@
                 tenants = await resT.json();
                 members = await resM.json();
                 applyFilters();
-            } catch (e) { alert('Lỗi tải dữ liệu máy chủ!'); }
+            } catch (e) { 
+                console.error('Lỗi tải dữ liệu:', e);
+                showToast('Lỗi tải dữ liệu máy chủ!', 'error'); 
+            }
         }
 
         function normalizeStr(str) {
@@ -395,7 +390,9 @@
         }
 
         function applyFilters() {
-            const rawTxt = document.getElementById('searchInput').value;
+            const qInput = document.getElementById('q_resident_search');
+            if (!qInput) return;
+            const rawTxt = qInput.value;
             const txt = normalizeStr(rawTxt);
             const area = document.getElementById('filterArea').value;
 
@@ -428,20 +425,33 @@
         }
 
         function updateStats() {
-            const activeT = filteredTenants.filter(t => t.idHopDong).length;
-            document.getElementById('statTenants').textContent = activeT;
-            document.getElementById('statMembers').textContent = filteredMembers.length;
-            document.getElementById('statTotal').textContent = activeT + filteredMembers.length;
-            document.getElementById('countTenants').textContent = filteredTenants.length;
-            document.getElementById('countMembers').textContent = filteredMembers.length;
+            // Bento Stats show totals based on current filters
+            const totalTenants = filteredTenants.length;
+            const totalMembers = filteredMembers.length;
+            
+            document.getElementById('statTenants').textContent = totalTenants;
+            document.getElementById('statMembers').textContent = totalMembers;
+            document.getElementById('statTotal').textContent = totalTenants + totalMembers;
+
+            // Tab Badges show current filtered results (already consistent)
+            document.getElementById('countTenants').textContent = totalTenants;
+            document.getElementById('countMembers').textContent = totalMembers;
         }
 
         function renderTenants(query = '') {
             const body = document.querySelector('#tableTenants tbody');
-            if (!filteredTenants.length) { body.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-secondary">Không có kết quả khớp</td></tr>'; return; }
+            if (!filteredTenants.length) { 
+                body.innerHTML = '<tr><td colspan="8" class="text-center py-4 text-secondary">Không có kết quả khớp</td></tr>'; 
+                return; 
+            }
             body.innerHTML = filteredTenants.map((t, idx) => `
                 <tr>
-                    <td class="fw-bold">${highlightText(t.HoTen, query)}</td>
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="fw-bold">${highlightText(t.HoTen, query)}</span>
+                            ${t.idTaiKhoan ? '<i class="fas fa-shield-check text-success tiny" title="Đã có tài khoản"></i>' : '<i class="fas fa-user-slash text-secondary tiny" title="Chưa có tài khoản"></i>'}
+                        </div>
+                    </td>
                     <td><span class="badge ${t.GioiTinh === 'Nữ' ? 'bg-pink' : 'bg-info'} bg-opacity-75">${t.GioiTinh || 'Nam'}</span></td>
                     <td><code>${highlightText(t.CCCD || '', query)}</code></td>
                     <td class="text-warning">${highlightText(t.SoDT, query)}</td>
@@ -449,16 +459,135 @@
                     <td class="small text-secondary">${highlightText(t.QueQuan || '', query)}</td>
                     <td><span class="badge ${t.SoPhong ? 'bg-primary' : 'bg-secondary'}">${highlightText(t.SoPhong ? 'P.' + t.SoPhong : 'Trống', query)}</span></td>
                     <td class="text-end">
-                        <button class="btn btn-sm btn-outline-warning" onclick="editTenant(${idx})"><i class="fas fa-edit"></i></button>
-                        <button class="btn btn-sm btn-outline-danger" onclick="deleteTenant(${t.idNguoiThue})"><i class="fas fa-trash"></i></button>
+                        <div class="btn-group">
+                            ${t.idTaiKhoan ? `
+                                <button class="btn btn-sm btn-outline-info" onclick="resetPassword(${idx})" title="Reset mật khẩu về 123456">
+                                    <i class="fas fa-undo"></i>
+                                </button>
+                            ` : `
+                                <button class="btn btn-sm btn-outline-success" onclick="createAccount(${idx})" title="Cấp tài khoản đăng nhập">
+                                    <i class="fas fa-key"></i>
+                                </button>
+                            `}
+                            <button class="btn btn-sm btn-outline-primary" onclick="openSmsModal(${idx})" title="Gửi SMS">
+                                <i class="fas fa-sms me-1"></i>Gửi SMS
+                            </button>
+                            <button class="btn btn-sm btn-outline-warning" onclick="editTenant(${idx})"><i class="fas fa-edit"></i></button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="deleteTenant(${t.idNguoiThue})"><i class="fas fa-trash"></i></button>
+                        </div>
                     </td>
                 </tr>
             `).join('');
         }
 
+        async function resetPassword(idx) {
+            const t = filteredTenants[idx];
+            showConfirm(`Reset mật khẩu của <b>${t.HoTen}</b> về mặc định (<b>123456</b>)?`, async () => {
+                try {
+                    const res = await fetch(`${API}/admin/reset-password`, {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({
+                            idTaiKhoan: t.idTaiKhoan,
+                            newPassword: '123456'
+                        })
+                    });
+                    if (res.ok) {
+                        showToast('Đã đặt lại mật khẩu về 123456!');
+                    } else {
+                        showToast('Lỗi khi đặt lại mật khẩu', 'error');
+                    }
+                } catch (e) {
+                    showToast('Lỗi kết nối máy chủ', 'error');
+                }
+            });
+        }
+
+        async function createAccount(idx) {
+            const t = filteredTenants[idx];
+            showConfirm(`Cấp tài khoản đăng nhập cho ${t.HoTen}?<br><small class="text-secondary">Tên đăng nhập: <b>${t.SoDT}</b> | MK mặc định: <b>123456</b></small>`, async () => {
+                try {
+                    const res = await fetch(`${API}/admin/create-tenant-account`, {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({
+                            idNguoiThue: t.idNguoiThue,
+                            username: t.SoDT,
+                            password: '123456'
+                        })
+                    });
+                    if (res.ok) {
+                        showToast('Đã cấp tài khoản thành công!');
+                        loadData();
+                    } else {
+                        const err = await res.json();
+                        showToast(err.error || 'Không thể tạo tài khoản', 'error');
+                    }
+                } catch (e) {
+                    showToast('Lỗi kết nối máy chủ', 'error');
+                }
+            });
+        }
+
+        function openSmsModal(idx) {
+            selectedSmsTenant = filteredTenants[idx];
+            if (!selectedSmsTenant) return;
+
+            const phone = selectedSmsTenant.SoDT || 'Chưa có SĐT';
+            document.getElementById('smsTenantInfo').textContent = `${selectedSmsTenant.HoTen} - ${phone}`;
+            document.getElementById('smsMessage').value = '';
+            smsModalInstance.show();
+            setTimeout(() => document.getElementById('smsMessage').focus(), 150);
+        }
+
+        async function submitSms() {
+            const message = document.getElementById('smsMessage').value.trim();
+            const btn = document.getElementById('btnSendSms');
+
+            if (!selectedSmsTenant) {
+                showToast('Chưa chọn khách thuê để gửi SMS.', 'error');
+                return;
+            }
+
+            if (!message) {
+                showToast('Vui lòng nhập nội dung SMS.', 'warning');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>ĐANG GỬI';
+
+            try {
+                const res = await fetch(`${API}/sms/send-to-tenant`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        idNguoiThue: selectedSmsTenant.idNguoiThue,
+                        message
+                    })
+                });
+                const result = await res.json();
+
+                if (res.ok && result.success) {
+                    smsModalInstance.hide();
+                    showToast(result.smsResult?.demo ? 'Đã ghi log SMS demo.' : 'Đã gửi SMS thành công!', 'success');
+                } else {
+                    showToast(result.error || result.smsResult?.error || 'Không gửi được SMS.', 'error');
+                }
+            } catch (e) {
+                showToast('Lỗi kết nối máy chủ!', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = 'GỬI SMS';
+            }
+        }
+
         function renderMembers(query = '') {
             const body = document.querySelector('#tableMembers tbody');
-            if (!filteredMembers.length) { body.innerHTML = '<tr><td colspan="8" class="text-center py-4 text-secondary">Không có kết quả khớp</td></tr>'; return; }
+            if (!filteredMembers.length) { 
+                body.innerHTML = '<tr><td colspan="9" class="text-center py-4 text-secondary">Không có kết quả khớp</td></tr>'; 
+                return; 
+            }
             body.innerHTML = filteredMembers.map((m, idx) => `
                 <tr>
                     <td class="fw-bold">${highlightText(m.HoTen, query)}</td>
@@ -508,7 +637,10 @@
                 Email: document.getElementById('email').value,
                 QuocTich: 'Việt Nam'
             };
-            if(!data.HoTen || !data.SoDT || !data.CCCD) { alert('Vui lòng điền đủ Họ tên, SĐT và CCCD!'); return; }
+            if(!data.HoTen || !data.SoDT || !data.CCCD) { 
+                showToast('Vui lòng điền đủ Họ tên, SĐT và CCCD!', 'error'); 
+                return; 
+            }
             try {
                 const res = await fetch(`${API}/nguoithue${id ? '/'+id : ''}`, {
                     method: id ? 'PUT' : 'POST',
@@ -519,15 +651,13 @@
                     tModalInstance.hide(); 
                     showToast(id ? 'Đã cập nhật thông tin khách thuê!' : 'Đã thêm khách thuê mới thành công!');
                     loadData(); 
-                }
-                else { 
+                } else { 
                     const err = await res.json(); 
                     showToast(err.error || 'Lỗi lưu dữ liệu', 'error'); 
                 }
             } catch(e) { showToast('Lỗi kết nối máy chủ!', 'error'); }
         }
 
-        // Action Thành Viên
         function editMember(idx) {
             const m = filteredMembers[idx];
             document.getElementById('editMemberId').value = m.idThanhVien;
@@ -591,7 +721,103 @@
             });
         }
 
+        
         function logout() { localStorage.removeItem('user'); window.location.href = 'login.html'; }
-    </script>
+        
+        async function submitChangePassword() {
+            const oldPass = document.getElementById('old-pass').value;
+            const newPass = document.getElementById('new-pass').value;
+            const confirmPass = document.getElementById('confirm-pass').value;
+
+            if (!oldPass || !newPass || !confirmPass) {
+                if (typeof showToast === 'function') showToast('Vui lòng nhập đầy đủ thông tin!', 'warning');
+                else alert('Vui lòng nhập đầy đủ thông tin!');
+                return;
+            }
+
+            if (newPass !== confirmPass) {
+                if (typeof showToast === 'function') showToast('Mật khẩu mới không khớp!', 'error');
+                else alert('Mật khẩu mới không khớp!');
+                return;
+            }
+
+            try {
+                const user = JSON.parse(localStorage.getItem('user'));
+                const res = await fetch('/api/admin/change-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        idAdmin: user.idAdmin || user.idNguoiThue,
+                        oldPass,
+                        newPass,
+                        type: user.idAdmin ? 'admin' : 'tenant'
+                    })
+                });
+
+                const result = await res.json();
+                if (res.ok) {
+                    if (typeof showToast === 'function') showToast('Đổi mật khẩu thành công!', 'success');
+                    else alert('Đổi mật khẩu thành công!');
+                    const modalEl = document.getElementById('changePasswordModal');
+                    const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+                    modal.hide();
+                    document.getElementById('old-pass').value = '';
+                    document.getElementById('new-pass').value = '';
+                    document.getElementById('confirm-pass').value = '';
+                } else {
+                    if (typeof showToast === 'function') showToast(result.error || 'Lỗi đổi mật khẩu', 'error');
+                    else alert(result.error || 'Lỗi đổi mật khẩu');
+                }
+            } catch (error) {
+                if (typeof showToast === 'function') showToast('Lỗi kết nối máy chủ!', 'error');
+                else alert('Lỗi kết nối máy chủ!');
+            }
+        }
+    
+        // Anti-autofill watchdog
+        document.addEventListener('DOMContentLoaded', () => {
+            const searchInputs = ['searchContract', 'q_invoice_search', 'q_utility_search', 'tenantSearch', 'roomSearch'];
+            searchInputs.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    const clear = () => { if(el.value.toLowerCase()==='admin') el.value=''; };
+                    setTimeout(clear, 300);
+                    setTimeout(clear, 1000);
+                    el.addEventListener('focus', () => el.removeAttribute('readonly'));
+                }
+            });
+        });</script>
+    <!-- Modal Đổi Mật Khẩu (Deep Cleaned) -->
+    <div class="modal fade" id="changePasswordModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content shadow-lg border-0" style="border-radius: 20px;">
+                <div class="modal-header border-bottom">
+                    <h6 class="modal-title fw-bold text-adaptive"><i class="fas fa-shield-alt me-2 text-primary"></i>Đổi mật khẩu</h6>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-secondary">MẬT KHẨU CŨ</label>
+                        <div class="input-group">
+                            <span class="input-group-text border-end-0 text-secondary" style="border-radius: 12px 0 0 12px; border: 1px solid #dee2e6;"><i class="fas fa-lock small"></i></span>
+                            <input type="password" id="old-pass" class="form-control border-start-0" placeholder="••••••" style="border-radius: 0 12px 12px 0; border: 1px solid #dee2e6; padding: 12px;">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-secondary">MẬT KHẨU MỚI</label>
+                        <div class="input-group">
+                            <span class="input-group-text border-end-0 text-secondary" style="border-radius: 12px 0 0 12px; border: 1px solid #dee2e6;"><i class="fas fa-key small"></i></span>
+                            <input type="password" id="new-pass" class="form-control border-start-0" placeholder="••••••" style="border-radius: 0 12px 12px 0; border: 1px solid #dee2e6; padding: 12px;">
+                        </div>
+                    </div>
+                    <div class="mb-0">
+                        <label class="form-label small fw-bold text-secondary">XÁC NHẬN MẬT KHẨU</label>
+                        <div class="input-group">
+                            <span class="input-group-text border-end-0 text-secondary" style="border-radius: 12px 0 0 12px; border: 1px solid #dee2e6;"><i class="fas fa-check-double small"></i></span>
+                            <input type="password" id="confirm-pass" class="form-control border-start-0" placeholder="••••••" style="border-radius: 0 12px 12px 0; border: 1px solid #dee2e6; padding: 12px;">
+                        </div>
+                    </div>
+                </div>
+                
 </body>
 </html>

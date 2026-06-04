@@ -2,12 +2,42 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const db = require('./db');
+const { sendSms } = require('./services/smsService');
+const multer = require('multer');
+const fs = require('fs');
 const app = express();
 const PORT = 3000;
 
 app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '../public')));
+
+// Cấu hình lưu trữ file cho hình ảnh phòng
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        const dir = path.join(__dirname, '../public/img/rooms/');
+        if (!fs.existsSync(dir)) {
+            fs.mkdirSync(dir, { recursive: true });
+        }
+        cb(null, dir);
+    },
+    filename: (req, file, cb) => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, uniqueSuffix + path.extname(file.originalname));
+    }
+});
+
+const upload = multer({ 
+    storage: storage,
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+    fileFilter: (req, file, cb) => {
+        if (file.mimetype.startsWith('image/')) {
+            cb(null, true);
+        } else {
+            cb(new Error('Chỉ cho phép tải lên hình ảnh!'));
+        }
+    }
+});
 
 // Logging middleware
 app.use((req, res, next) => {
@@ -86,7 +116,8 @@ app.get('/api/khutro/:id/details', (req, res) => {
 app.get('/api/phong', (req, res) => {
     const query = `
         SELECT p.*, k.TenKhuTro, 
-               (SELECT idHopDong FROM HopDong WHERE idPhong = p.idPhong AND ngayHetHan >= CURDATE() LIMIT 1) as idHopDong 
+               (SELECT idHopDong FROM HopDong WHERE idPhong = p.idPhong AND ngayHetHan >= CURDATE() LIMIT 1) as idHopDong,
+               (SELECT duongDan FROM hinhanhphong WHERE idPhong = p.idPhong LIMIT 1) as thumbnail
         FROM Phong p 
         JOIN KhuTro k ON p.idKhuTro = k.idKhuTro
         ORDER BY k.TenKhuTro ASC, p.SoPhong ASC
@@ -108,7 +139,16 @@ app.get('/api/phong/:id/details', (req, res) => {
     `;
     db.query(query, [req.params.id], (err, results) => {
         if (err) return res.status(500).json({ error: err.message });
-        res.json(results[0]);
+        if (results.length === 0) return res.status(404).json({ error: 'Không tìm thấy phòng' });
+        
+        const room = results[0];
+        
+        // Lấy danh sách hình ảnh
+        db.query('SELECT * FROM hinhanhphong WHERE idPhong = ?', [req.params.id], (err, imageResults) => {
+            if (err) return res.status(500).json({ error: err.message });
+            room.images = imageResults;
+            res.json(room);
+        });
     });
 });
 
@@ -142,10 +182,65 @@ app.put('/api/phong/:id', (req, res) => {
         res.json({ message: 'Cập nhật thành công!' });
     });
 });
+
 app.delete('/api/phong/:id', (req, res) => {
     db.query('DELETE FROM Phong WHERE idPhong = ?', [req.params.id], (err, result) => {
         if (err) return res.status(500).json({ error: "Phòng này đang có người ở hoặc có hợp đồng!" });
         res.json({ message: 'Đã xóa phòng!' });
+    });
+});
+
+// --- API HÌNH ẢNH PHÒNG ---
+app.post('/api/phong/:id/images', upload.array('images', 10), (req, res) => {
+    const { id } = req.params;
+    const files = req.files;
+    
+    console.log(`[UPLOAD] Nhận yêu cầu upload ảnh cho phòng ID: ${id}`);
+    
+    if (!files || files.length === 0) {
+        console.warn(`[UPLOAD] Không có file nào được gửi lên cho phòng ID: ${id}`);
+        return res.status(400).json({ error: 'Không có file nào được tải lên' });
+    }
+
+    console.log(`[UPLOAD] Đang xử lý ${files.length} file cho phòng ID: ${id}`);
+
+    const values = files.map(file => [id, `/img/rooms/${file.filename}`]);
+    const query = 'INSERT INTO hinhanhphong (idPhong, duongDan) VALUES ?';
+    
+    db.query(query, [values], (err, result) => {
+        if (err) {
+            console.error(`[UPLOAD] Lỗi khi lưu vào DB cho phòng ID: ${id}`, err);
+            return res.status(500).json({ error: err.message });
+        }
+        console.log(`[UPLOAD] Đã lưu ${files.length} ảnh vào DB cho phòng ID: ${id}`);
+        res.status(201).json({ message: 'Tải lên thành công!', count: files.length });
+    });
+});
+
+app.delete('/api/phong/images/:id', (req, res) => {
+    const { id } = req.params;
+    
+    // Lấy đường dẫn file trước khi xóa trong DB
+    db.query('SELECT duongDan FROM hinhanhphong WHERE idHinhAnh = ?', [id], (err, results) => {
+        if (err) return res.status(500).json({ error: err.message });
+        if (results.length === 0) return res.status(404).json({ error: 'Không tìm thấy ảnh' });
+        
+        const filePath = path.join(__dirname, '../public', results[0].duongDan);
+        
+        // Xóa trong DB
+        db.query('DELETE FROM hinhanhphong WHERE idHinhAnh = ?', [id], (err) => {
+            if (err) return res.status(500).json({ error: err.message });
+            
+            // Xóa file vật lý
+            if (fs.existsSync(filePath)) {
+                try {
+                    fs.unlinkSync(filePath);
+                } catch (e) {
+                    console.error('Lỗi xóa file:', e);
+                }
+            }
+            res.json({ message: 'Đã xóa ảnh!' });
+        });
     });
 });
 
@@ -165,10 +260,12 @@ app.get('/api/nguoithue', (req, res) => {
 });
 
 app.get('/api/nguoithue/chua-thue', (req, res) => {
+    // Lấy khách thuê không có hợp đồng nào còn hiệu lực (ngayHetHan >= CURDATE())
     const query = `
-        SELECT nt.* FROM NguoiThue nt 
-        LEFT JOIN HopDong hd ON nt.idNguoiThue = hd.idNguoiThue 
-        WHERE hd.idHopDong IS NULL
+        SELECT * FROM NguoiThue 
+        WHERE idNguoiThue NOT IN (
+            SELECT idNguoiThue FROM HopDong WHERE ngayHetHan >= CURDATE()
+        )
     `;
     db.query(query, (err, results) => {
         if (err) return res.status(500).json({ error: err.message });
@@ -196,7 +293,7 @@ app.post('/api/nguoithue', (req, res) => {
 
         db.beginTransaction(err => {
             if (err) return res.status(500).json({ error: err.message });
-            const sqlAcc = 'INSERT INTO TaiKhoan (TenDangNhap, MatKhau, Quyen) VALUES (?, "123", "NguoiThue")';
+            const sqlAcc = 'INSERT INTO TaiKhoan (TenDangNhap, MatKhau, Quyen) VALUES (?, "123456", "NguoiThue")';
             db.query(sqlAcc, [SoDT], (err, accResult) => {
                 if (err) return db.rollback(() => res.status(500).json({ error: err.message }));
                 const sqlTenant = 'INSERT INTO NguoiThue (idTaiKhoan, HoTen, Email, SoDT, CCCD, GioiTinh, QueQuan, QuocTich) VALUES (?, ?, ?, ?, ?, ?, ?, ?)';
@@ -527,20 +624,34 @@ app.post('/api/hoadon', (req, res) => {
         const tienNuoc = (nuocMoi - nuocCu) * giaNuoc;
         const tongTien = tienPhong + tienDien + tienNuoc + tienDichVu;
 
-        const query = 'INSERT INTO HoaDon (idHopDong, ngayLap, tongTien, trangThai, dienCu, dienMoi, giaDien, nuocCu, nuocMoi, giaNuoc) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
-        db.query(query, [idHopDong, ngayLap, tongTien, trangThai, dienCu, dienMoi, giaDien, nuocCu, nuocMoi, giaNuoc], (err, result) => {
-            if (err) return res.status(500).json({ error: err.message });
+        // KIỂM TRA TRÙNG LẶP: Đã có hóa đơn tháng này chưa?
+        const checkQuery = `
+            SELECT idHoaDon FROM HoaDon 
+            WHERE idHopDong = ? 
+            AND MONTH(ngayLap) = MONTH(?) 
+            AND YEAR(ngayLap) = YEAR(?)
+        `;
+        db.query(checkQuery, [idHopDong, ngayLap, ngayLap], (err, checkResults) => {
+            if (err) return res.status(500).json({ error: 'Lỗi kiểm tra trùng lặp' });
             
-            // Lưu vết các dịch vụ vào bảng hoadondichvu (nếu cần xem chi tiết sau này)
+            if (checkResults.length > 0) {
+                return res.status(400).json({ error: `Phòng này đã có hóa đơn cho tháng ${new Date(ngayLap).getMonth() + 1}/${new Date(ngayLap).getFullYear()}. Vui lòng kiểm tra lại!` });
+            }
+
+            const query = 'INSERT INTO HoaDon (idHopDong, ngayLap, tongTien, trangThai, dienCu, dienMoi, giaDien, nuocCu, nuocMoi, giaNuoc, tienDichVu) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
+            db.query(query, [idHopDong, ngayLap, tongTien, trangThai, dienCu, dienMoi, giaDien, nuocCu, nuocMoi, giaNuoc, tienDichVu], (err, result) => {
+                if (err) return res.status(500).json({ error: err.message });
+            
+            // Lưu vết các dịch vụ vào bảng hoadondichvu
             if (services && services.length > 0) {
                 const idHoaDon = result.insertId;
                 const svQueries = services.map(s => {
                     let sl = 1;
                     if (s.customQty !== undefined) sl = s.customQty;
                     else if (s.loaiThu === 'Theo người') sl = tongNguoi;
-                    return [idHoaDon, s.idDichVu, sl, s.Gia * sl];
+                    return [idHoaDon, s.isCustom ? null : s.idDichVu, s.isCustom ? s.TenDichVu : null, sl, s.Gia * sl];
                 });
-                db.query('INSERT INTO HoaDonDichVu (idHoaDon, idDichVu, soLuong, thanhTien) VALUES ?', [svQueries], (err) => {
+                db.query('INSERT INTO HoaDonDichVu (idHoaDon, idDichVu, tenDichVuCustom, soLuong, thanhTien) VALUES ?', [svQueries], (err) => {
                     if (err) console.error('Lỗi lưu chi tiết dịch vụ:', err);
                 });
             }
@@ -548,6 +659,7 @@ app.post('/api/hoadon', (req, res) => {
             res.status(201).json({ message: 'Tạo hóa đơn thành công!' });
         });
     });
+});
 });
 
 app.put('/api/hoadon/:id', (req, res) => {
@@ -586,8 +698,8 @@ app.put('/api/hoadon/:id', (req, res) => {
 
         const tongTien = Number(giaThue) + (dienMoi - dienCu) * giaDien + (nuocMoi - nuocCu) * giaNuoc + tienDichVu;
         
-        const query = 'UPDATE HoaDon SET idHopDong=?, ngayLap=?, tongTien=?, trangThai=?, dienCu=?, dienMoi=?, giaDien=?, nuocCu=?, nuocMoi=?, giaNuoc=? WHERE idHoaDon=?';
-        db.query(query, [idHopDong, ngayLap, tongTien, trangThai, dienCu, dienMoi, giaDien, nuocCu, nuocMoi, giaNuoc, id], (err) => {
+        const query = 'UPDATE HoaDon SET idHopDong=?, ngayLap=?, tongTien=?, trangThai=?, dienCu=?, dienMoi=?, giaDien=?, nuocCu=?, nuocMoi=?, giaNuoc=?, tienDichVu=? WHERE idHoaDon=?';
+        db.query(query, [idHopDong, ngayLap, tongTien, trangThai, dienCu, dienMoi, giaDien, nuocCu, nuocMoi, giaNuoc, tienDichVu, id], (err) => {
             if (err) return res.status(500).json({ error: err.message });
             
             // Cập nhật dịch vụ: Xóa cũ thêm mới
@@ -597,9 +709,9 @@ app.put('/api/hoadon/:id', (req, res) => {
                         let sl = 1;
                         if (s.customQty !== undefined) sl = s.customQty;
                         else if (s.loaiThu === 'Theo người') sl = tongNguoi;
-                        return [id, s.idDichVu, sl, s.Gia * sl];
+                        return [id, s.isCustom ? null : s.idDichVu, s.isCustom ? s.TenDichVu : null, sl, s.Gia * sl];
                     });
-                    db.query('INSERT INTO HoaDonDichVu (idHoaDon, idDichVu, soLuong, thanhTien) VALUES ?', [svQueries], (err2) => {
+                    db.query('INSERT INTO HoaDonDichVu (idHoaDon, idDichVu, tenDichVuCustom, soLuong, thanhTien) VALUES ?', [svQueries], (err2) => {
                         res.json({ message: 'Cập nhật thành công!' });
                     });
                 } else {
@@ -676,9 +788,9 @@ app.post('/api/utilities/batch', async (req, res) => {
                         const idHoaDon = result.insertId;
                         if (services.length > 0) {
                             const svQueries = services.map(s => [
-                                idHoaDon, s.idDichVu, (s.loaiThu === 'Theo người' ? tongNguoi : 1), (s.loaiThu === 'Theo người' ? s.Gia * tongNguoi : s.Gia)
+                                idHoaDon, s.idDichVu, null, (s.loaiThu === 'Theo người' ? tongNguoi : 1), (s.loaiThu === 'Theo người' ? s.Gia * tongNguoi : s.Gia)
                             ]);
-                            db.query('INSERT INTO HoaDonDichVu (idHoaDon, idDichVu, soLuong, thanhTien) VALUES ?', [svQueries], (errRes) => {
+                            db.query('INSERT INTO HoaDonDichVu (idHoaDon, idDichVu, tenDichVuCustom, soLuong, thanhTien) VALUES ?', [svQueries], (errRes) => {
                                 resolve({ success: true });
                             });
                         } else {
@@ -697,9 +809,9 @@ app.post('/api/utilities/batch', async (req, res) => {
 
 app.get('/api/hoadon/:id/services', (req, res) => {
     const query = `
-        SELECT hddv.*, dv.TenDichVu, dv.DonViTinh 
+        SELECT hddv.*, COALESCE(dv.TenDichVu, hddv.tenDichVuCustom) AS TenDichVu, COALESCE(dv.DonViTinh, 'Lần') AS DonViTinh 
         FROM HoaDonDichVu hddv
-        JOIN DichVu dv ON hddv.idDichVu = dv.idDichVu
+        LEFT JOIN DichVu dv ON hddv.idDichVu = dv.idDichVu
         WHERE hddv.idHoaDon = ?
     `;
     db.query(query, [req.params.id], (err, results) => {
@@ -732,6 +844,37 @@ app.get('/api/thongke', (req, res) => {
         res.json(results[0]);
     });
 });
+
+// API Lấy danh sách sự kiện thông minh cho Dashboard (Kết hợp nhiều nguồn - Bản tối ưu UNION)
+app.get('/api/thongke/notifications', (req, res) => {
+    const limit = parseInt(req.query.limit) || 10;
+    const subLimit = Math.ceil(limit / 2); // Tăng giới hạn từng nguồn để phong phú hơn
+
+    const query = `
+        (SELECT 'report' as type, idBaoCao as id, TieuDe as title, NoiDung as \`desc\`, NgayBao as date, 'warning' as color, 'fa-tools' as icon, 'admin_baocao.html' as link 
+         FROM BaoCaoSuaChua WHERE TrangThai = 'Chờ xử lý' LIMIT ${subLimit})
+        UNION ALL
+        (SELECT 'contract' as type, hd.idHopDong as id, p.SoPhong as title, 'Hợp đồng sắp hết hạn' as \`desc\`, hd.ngayHetHan as date, 'danger' as color, 'fa-file-contract' as icon, 'contracts.html' as link 
+         FROM HopDong hd JOIN Phong p ON hd.idPhong = p.idPhong WHERE hd.ngayHetHan BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 30 DAY) LIMIT ${subLimit})
+        UNION ALL
+        (SELECT 'payment' as type, h.idHoaDon as id, p.SoPhong as title, CONCAT('Nợ phí: ', FORMAT(h.tongTien, 0), ' đ') as \`desc\`, h.ngayLap as date, 'warning' as color, 'fa-money-bill-wave' as icon, 'invoices.html' as link 
+         FROM HoaDon h JOIN HopDong hd ON h.idHopDong = hd.idHopDong JOIN Phong p ON hd.idPhong = p.idPhong WHERE h.trangThai = 'Chưa thanh toán' LIMIT ${subLimit})
+        UNION ALL
+        (SELECT 'tenant' as type, idNguoiThue as id, HoTen as title, 'Khách thuê mới' as \`desc\`, CURDATE() as date, 'info' as color, 'fa-user-plus' as icon, 'tenants.html' as link 
+         FROM NguoiThue ORDER BY idNguoiThue DESC LIMIT ${subLimit})
+        ORDER BY date DESC LIMIT ${limit}
+    `;
+
+
+    db.query(query, (err, results) => {
+        if (err) {
+            console.error('Lỗi lấy sự kiện:', err);
+            return res.status(500).json({ error: err.message });
+        }
+        res.json(results);
+    });
+});
+
 
 // --- API THÔNG BÁO (BẢN SIÊU ỔN ĐỊNH) ---
 app.get('/api/notifications', (req, res) => {
@@ -768,6 +911,348 @@ app.get('/api/notifications', (req, res) => {
     setTimeout(() => {
         if (!res.headersSent) res.json(notifications);
     }, 3000);
+});
+
+// --- API THÔNG BÁO TỪ ADMIN ---
+app.get('/api/thongbao', (req, res) => {
+    const { idNguoiThue } = req.query;
+    let sql = 'SELECT * FROM ThongBao ';
+    let params = [];
+
+    if (idNguoiThue) {
+        sql += 'WHERE idNguoiThue IS NULL OR idNguoiThue = ? ';
+        params.push(idNguoiThue);
+    }
+    
+    sql += 'ORDER BY ngayDang DESC';
+    
+    db.query(sql, params, (err, results) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(results);
+    });
+});
+
+app.post('/api/thongbao', (req, res) => {
+    const { tieuDe, noiDung, loaiThongBao, idNguoiThue, idNguoiThues } = req.body;
+    
+    // Nếu gửi cho nhiều người (mảng IDs)
+    if (Array.isArray(idNguoiThues) && idNguoiThues.length > 0) {
+        const values = idNguoiThues.map(id => [tieuDe, noiDung, loaiThongBao || 'Chung', id]);
+        const sql = 'INSERT INTO ThongBao (tieuDe, noiDung, loaiThongBao, idNguoiThue) VALUES ?';
+        db.query(sql, [values], (err, result) => {
+            if (err) return res.status(500).json({ error: err.message });
+            res.status(201).json({ message: 'Đã gửi thông báo cho nhóm cư dân.' });
+        });
+        return;
+    }
+
+    // Gửi cho 1 người hoặc tất cả (idNguoiThue = null)
+    const sql = 'INSERT INTO ThongBao (tieuDe, noiDung, loaiThongBao, idNguoiThue) VALUES (?, ?, ?, ?)';
+    db.query(sql, [tieuDe, noiDung, loaiThongBao || 'Chung', idNguoiThue || null], (err, result) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.status(201).json({ idThongBao: result.insertId });
+    });
+});
+
+app.delete('/api/thongbao/:id', (req, res) => {
+    db.query('DELETE FROM ThongBao WHERE idThongBao = ?', [req.params.id], (err, result) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ message: 'Đã xóa thông báo!' });
+    });
+});
+
+// --- API GỬI SMS THỦ CÔNG ---
+app.post('/api/sms/send-to-tenant', (req, res) => {
+    const { idNguoiThue, message } = req.body;
+
+    if (!idNguoiThue) {
+        return res.status(400).json({ error: 'Thiếu idNguoiThue.' });
+    }
+
+    if (typeof message !== 'string' || !message.trim()) {
+        return res.status(400).json({ error: 'Nội dung SMS không được để trống.' });
+    }
+
+    // Lấy số điện thoại người thuê trước khi gọi dịch vụ SMS.
+    db.query('SELECT SoDT FROM NguoiThue WHERE idNguoiThue = ?', [idNguoiThue], async (err, results) => {
+        if (err) return res.status(500).json({ error: err.message });
+        if (results.length === 0) return res.status(404).json({ error: 'Không tìm thấy người thuê.' });
+
+        const tenantPhone = results[0].SoDT;
+        if (!tenantPhone) {
+            return res.status(400).json({ error: 'Người thuê này chưa có số điện thoại.' });
+        }
+
+        try {
+            const smsResult = await sendSms(tenantPhone, message.trim());
+            res.json({
+                success: smsResult.success,
+                message: smsResult.success ? 'Đã xử lý yêu cầu gửi SMS.' : 'Không gửi được SMS.',
+                tenantPhone,
+                smsResult
+            });
+        } catch (error) {
+            res.status(500).json({
+                success: false,
+                message: 'Không gửi được SMS.',
+                tenantPhone,
+                smsResult: {
+                    success: false,
+                    error: error.message
+                }
+            });
+        }
+    });
+});
+
+// --- API XÁC THỰC (LOGIN) ---
+app.post('/api/admin/create-tenant-account', (req, res) => {
+    const { idNguoiThue, username, password } = req.body;
+    
+    // 1. Kiểm tra xem đã có tài khoản chưa
+    db.query('SELECT idTaiKhoan FROM NguoiThue WHERE idNguoiThue = ?', [idNguoiThue], (err, results) => {
+        if (err) return res.status(500).json({ error: err.message });
+        if (results.length > 0 && results[0].idTaiKhoan) {
+            return res.status(400).json({ error: 'Khách thuê này đã có tài khoản rồi.' });
+        }
+
+        // 2. Tạo tài khoản mới
+        db.query('INSERT INTO TaiKhoan (TenDangNhap, MatKhau, Quyen) VALUES (?, ?, "NguoiThue")', [username, password], (err, result) => {
+            if (err) return res.status(500).json({ error: 'Tên đăng nhập đã tồn tại hoặc lỗi hệ thống.' });
+            
+            const idTaiKhoan = result.insertId;
+            // 3. Liên kết với người thuê
+            db.query('UPDATE NguoiThue SET idTaiKhoan = ? WHERE idNguoiThue = ?', [idTaiKhoan, idNguoiThue], (err) => {
+                if (err) return res.status(500).json({ error: err.message });
+                res.json({ message: 'Đã cấp tài khoản thành công!' });
+            });
+        });
+    });
+});
+
+app.post('/api/admin/reset-password', (req, res) => {
+    const { idTaiKhoan, newPassword } = req.body;
+    db.query('UPDATE TaiKhoan SET MatKhau = ? WHERE idTaiKhoan = ?', [newPassword, idTaiKhoan], (err) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ message: 'Đã đặt lại mật khẩu thành công!' });
+    });
+});
+
+app.post('/api/login', (req, res) => {
+    const { username, password } = req.body;
+    db.query('SELECT * FROM TaiKhoan WHERE TenDangNhap = ? AND MatKhau = ?', [username, password], (err, results) => {
+        if (err) return res.status(500).json({ error: err.message });
+        if (results.length === 0) return res.status(401).json({ error: 'Sai tài khoản hoặc mật khẩu' });
+        
+        const account = results[0];
+        if (account.Quyen === 'Admin') {
+            res.json({ idTaiKhoan: account.idTaiKhoan, idAdmin: account.idTaiKhoan, name: 'Admin', role: 'Admin' });
+        } else {
+            // Lấy thông tin người thuê
+            db.query('SELECT idNguoiThue, HoTen FROM NguoiThue WHERE idTaiKhoan = ?', [account.idTaiKhoan], (err, ntResults) => {
+                if (err) return res.status(500).json({ error: err.message });
+                if (ntResults.length === 0) return res.status(404).json({ error: 'Không tìm thấy hồ sơ khách thuê' });
+                
+                res.json({ 
+                    idTaiKhoan: account.idTaiKhoan, 
+                    idNguoiThue: ntResults[0].idNguoiThue, 
+                    name: ntResults[0].HoTen, 
+                    role: 'NguoiThue' 
+                });
+            });
+        }
+    });
+});
+
+app.post('/api/change-password', (req, res) => {
+    const { idTaiKhoan, oldPassword, newPassword } = req.body;
+    
+    // 1. Kiểm tra mật khẩu cũ
+    db.query('SELECT * FROM TaiKhoan WHERE idTaiKhoan = ? AND MatKhau = ?', [idTaiKhoan, oldPassword], (err, results) => {
+        if (err) return res.status(500).json({ error: err.message });
+        if (results.length === 0) return res.status(401).json({ error: 'Mật khẩu cũ không chính xác.' });
+
+        // 2. Cập nhật mật khẩu mới
+        db.query('UPDATE TaiKhoan SET MatKhau = ? WHERE idTaiKhoan = ?', [newPassword, idTaiKhoan], (err) => {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json({ message: 'Đã đổi mật khẩu thành công!' });
+        });
+    });
+});
+
+app.post('/api/admin/change-password', (req, res) => {
+    const { idAdmin, oldPass, newPass, type } = req.body;
+    
+    const changePass = (idTaiKhoan) => {
+        db.query('SELECT * FROM TaiKhoan WHERE idTaiKhoan = ? AND MatKhau = ?', [idTaiKhoan, oldPass], (err, results) => {
+            if (err) return res.status(500).json({ error: err.message });
+            if (results.length === 0) return res.status(401).json({ error: 'Mật khẩu cũ không chính xác.' });
+
+            db.query('UPDATE TaiKhoan SET MatKhau = ? WHERE idTaiKhoan = ?', [newPass, idTaiKhoan], (err) => {
+                if (err) return res.status(500).json({ error: err.message });
+                res.json({ message: 'Đã đổi mật khẩu thành công!' });
+            });
+        });
+    };
+
+    if (type === 'admin') {
+        changePass(idAdmin);
+    } else {
+        db.query('SELECT idTaiKhoan FROM NguoiThue WHERE idNguoiThue = ?', [idAdmin], (err, ntResults) => {
+            if (err) return res.status(500).json({ error: err.message });
+            if (ntResults.length === 0 || !ntResults[0].idTaiKhoan) return res.status(404).json({ error: 'Không tìm thấy tài khoản.' });
+            changePass(ntResults[0].idTaiKhoan);
+        });
+    }
+});
+
+// --- API KHÁCH THUÊ (TENANT) ---
+app.get('/api/tenant/:id/hoadon', (req, res) => {
+    const query = `
+        SELECT h.*, p.SoPhong, k.TenKhuTro
+        FROM HoaDon h 
+        JOIN HopDong hd ON h.idHopDong = hd.idHopDong 
+        JOIN Phong p ON hd.idPhong = p.idPhong 
+        JOIN KhuTro k ON p.idKhuTro = k.idKhuTro 
+        WHERE hd.idNguoiThue = ?
+        ORDER BY h.ngayLap DESC
+    `;
+    db.query(query, [req.params.id], (err, results) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(results);
+    });
+});
+
+app.get('/api/tenant/:id/baocao', (req, res) => {
+    db.query('SELECT * FROM BaoCaoSuaChua WHERE idNguoiThue = ? ORDER BY NgayBao DESC', [req.params.id], (err, results) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(results);
+    });
+});
+
+// Lấy thông tin chỉ số điện nước mới nhất từ hóa đơn
+app.get('/api/tenant/:id/chisodiennuoc', (req, res) => {
+    const query = `
+        SELECT h.dienMoi as chiSoDien, h.nuocMoi as chiSoNuoc, MONTH(h.ngayLap) as thang, YEAR(h.ngayLap) as nam, p.SoPhong
+        FROM HoaDon h
+        JOIN HopDong hd ON h.idHopDong = hd.idHopDong
+        JOIN Phong p ON hd.idPhong = p.idPhong
+        WHERE hd.idNguoiThue = ?
+        ORDER BY h.ngayLap DESC
+        LIMIT 1
+    `;
+    db.query(query, [req.params.id], (err, results) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(results[0] || {});
+    });
+});
+
+// Lấy danh sách dịch vụ đang sử dụng (từ hóa đơn mới nhất của người thuê)
+app.get('/api/tenant/:id/dichvu', (req, res) => {
+    const { id } = req.params;
+    const query = `
+        SELECT dv.* 
+        FROM HoaDonDichVu hddv
+        JOIN DichVu dv ON hddv.idDichVu = dv.idDichVu
+        WHERE hddv.idHoaDon = (
+            SELECT h.idHoaDon 
+            FROM HoaDon h 
+            JOIN HopDong hd ON h.idHopDong = hd.idHopDong 
+            WHERE hd.idNguoiThue = ? 
+            ORDER BY h.ngayLap DESC LIMIT 1
+        )
+    `;
+    db.query(query, [id], (err, results) => {
+        if (err) return res.status(500).json({ error: err.message });
+        
+        if (results.length === 0) {
+            // Nếu chưa có hóa đơn, trả về tất cả dịch vụ (mặc định cho người mới)
+            db.query('SELECT * FROM DichVu', (err2, allResults) => {
+                if (err2) return res.status(500).json({ error: err2.message });
+                res.json(allResults);
+            });
+        } else {
+            res.json(results);
+        }
+    });
+});
+
+// Lấy danh sách dịch vụ từ hóa đơn cuối cùng của hợp đồng
+app.get('/api/hopdong/:id/last-services', (req, res) => {
+    const { id } = req.params;
+    const query = `
+        SELECT hddv.idDichVu, hddv.soLuong
+        FROM HoaDonDichVu hddv
+        WHERE hddv.idHoaDon = (
+            SELECT idHoaDon FROM HoaDon 
+            WHERE idHopDong = ? 
+            ORDER BY ngayLap DESC LIMIT 1
+        )
+    `;
+    db.query(query, [id], (err, results) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(results);
+    });
+});
+
+
+// Lấy thông tin hợp đồng chi tiết - NỚI LỎNG ĐIỀU KIỆN ĐỂ LUÔN THẤY
+app.get('/api/tenant/:id/contract-detail', (req, res) => {
+    const query = `
+        SELECT hd.*, p.SoPhong, k.TenKhuTro, p.giaThue
+        FROM HopDong hd
+        JOIN Phong p ON hd.idPhong = p.idPhong
+        JOIN KhuTro k ON p.idKhuTro = k.idKhuTro
+        WHERE hd.idNguoiThue = ?
+        ORDER BY hd.idHopDong DESC
+        LIMIT 1
+    `;
+    db.query(query, [req.params.id], (err, results) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(results[0] || {});
+    });
+});
+
+app.post('/api/tenant/baocao', (req, res) => {
+    const { idNguoiThue, TieuDe, NoiDung } = req.body;
+    db.query('INSERT INTO BaoCaoSuaChua (idNguoiThue, TieuDe, NoiDung) VALUES (?, ?, ?)', [idNguoiThue, TieuDe, NoiDung], (err) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.status(201).json({ message: 'Gửi báo cáo thành công' });
+    });
+});
+
+// API cho Admin xem và cập nhật báo cáo - ĐƠN GIẢN HÓA ĐỂ KHÔNG BỊ MẤT DỮ LIỆU
+app.get('/api/admin/baocao', (req, res) => {
+    const query = `
+        SELECT 
+            bc.*, 
+            nt.HoTen, 
+            COALESCE(p.SoPhong, 'Chưa gán') as SoPhong, 
+            COALESCE(k.TenKhuTro, '---') as TenKhuTro
+        FROM BaoCaoSuaChua bc
+        LEFT JOIN NguoiThue nt ON bc.idNguoiThue = nt.idNguoiThue
+        LEFT JOIN HopDong hd ON nt.idNguoiThue = hd.idNguoiThue
+        LEFT JOIN Phong p ON hd.idPhong = p.idPhong
+        LEFT JOIN KhuTro k ON p.idKhuTro = k.idKhuTro
+        GROUP BY bc.idBaoCao
+        ORDER BY bc.idBaoCao DESC
+    `;
+    db.query(query, (err, results) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(results);
+    });
+});
+
+app.put('/api/admin/baocao/:id', (req, res) => {
+    const { TrangThai, PhanHoiAdmin } = req.body;
+    console.log(`Updating report ${req.params.id}: Status=${TrangThai}, Reply=${PhanHoiAdmin}`);
+    db.query('UPDATE BaoCaoSuaChua SET TrangThai = ?, PhanHoiAdmin = ? WHERE idBaoCao = ?', [TrangThai, PhanHoiAdmin, req.params.id], (err) => {
+        if (err) {
+            console.error('Update error:', err);
+            return res.status(500).json({ error: err.message });
+        }
+        res.json({ message: 'Cập nhật thành công' });
+    });
 });
 
 app.listen(PORT, () => {
