@@ -3,6 +3,7 @@ const cors = require('cors');
 const path = require('path');
 const db = require('./db');
 const { sendSms } = require('./services/smsService');
+const { ensureSmsLogsTable, getSmsLogs, saveSmsLog } = require('./services/smsLogService');
 const multer = require('multer');
 const fs = require('fs');
 const app = express();
@@ -11,6 +12,10 @@ const PORT = 3000;
 app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '../public')));
+
+ensureSmsLogsTable().catch(err => {
+    console.error('[SMS LOG] Không thể khởi tạo bảng sms_logs:', err.message);
+});
 
 // Cấu hình lưu trữ file cho hình ảnh phòng
 const storage = multer.diskStorage({
@@ -976,15 +981,61 @@ app.post('/api/sms/send-to-tenant', (req, res) => {
     // Lấy số điện thoại người thuê trước khi gọi dịch vụ SMS.
     db.query('SELECT SoDT FROM NguoiThue WHERE idNguoiThue = ?', [idNguoiThue], async (err, results) => {
         if (err) return res.status(500).json({ error: err.message });
-        if (results.length === 0) return res.status(404).json({ error: 'Không tìm thấy người thuê.' });
+        if (results.length === 0) {
+            try {
+                await saveSmsLog({
+                    idNguoiThue,
+                    phoneOriginal: null,
+                    phoneNormalized: null,
+                    message: message.trim(),
+                    status: 'failed',
+                    errorMessage: 'Không tìm thấy người thuê.',
+                    isDemo: process.env.SMS_ENABLED !== 'true'
+                });
+            } catch (logError) {
+                console.error('[SMS LOG] Không thể lưu lịch sử SMS:', logError.message);
+            }
+
+            return res.status(404).json({ error: 'Không tìm thấy người thuê.' });
+        }
 
         const tenantPhone = results[0].SoDT;
         if (!tenantPhone) {
+            try {
+                await saveSmsLog({
+                    idNguoiThue,
+                    phoneOriginal: null,
+                    phoneNormalized: null,
+                    message: message.trim(),
+                    status: 'failed',
+                    errorMessage: 'Người thuê này chưa có số điện thoại.',
+                    isDemo: process.env.SMS_ENABLED !== 'true'
+                });
+            } catch (logError) {
+                console.error('[SMS LOG] Không thể lưu lịch sử SMS:', logError.message);
+            }
+
             return res.status(400).json({ error: 'Người thuê này chưa có số điện thoại.' });
         }
 
         try {
             const smsResult = await sendSms(tenantPhone, message.trim());
+            const status = smsResult.success ? 'success' : 'failed';
+
+            try {
+                await saveSmsLog({
+                    idNguoiThue,
+                    phoneOriginal: smsResult.originalTo || smsResult.to || tenantPhone,
+                    phoneNormalized: smsResult.normalizedTo || null,
+                    message: message.trim(),
+                    status,
+                    errorMessage: smsResult.error || null,
+                    isDemo: smsResult.demo === true
+                });
+            } catch (logError) {
+                console.error('[SMS LOG] Không thể lưu lịch sử SMS:', logError.message);
+            }
+
             res.json({
                 success: smsResult.success,
                 message: smsResult.success ? 'Đã xử lý yêu cầu gửi SMS.' : 'Không gửi được SMS.',
@@ -992,6 +1043,20 @@ app.post('/api/sms/send-to-tenant', (req, res) => {
                 smsResult
             });
         } catch (error) {
+            try {
+                await saveSmsLog({
+                    idNguoiThue,
+                    phoneOriginal: tenantPhone,
+                    phoneNormalized: null,
+                    message: message.trim(),
+                    status: 'failed',
+                    errorMessage: error.message,
+                    isDemo: process.env.SMS_ENABLED !== 'true'
+                });
+            } catch (logError) {
+                console.error('[SMS LOG] Không thể lưu lịch sử SMS:', logError.message);
+            }
+
             res.status(500).json({
                 success: false,
                 message: 'Không gửi được SMS.',
@@ -1003,6 +1068,15 @@ app.post('/api/sms/send-to-tenant', (req, res) => {
             });
         }
     });
+});
+
+app.get('/api/sms/logs', async (req, res) => {
+    try {
+        const logs = await getSmsLogs(req.query.limit);
+        res.json(logs);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
 // --- API XÁC THỰC (LOGIN) ---

@@ -166,6 +166,36 @@
                     </div>
                 </div>
             </div>
+
+            <div class="card mt-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="fw-bold"><i class="fas fa-history me-2 text-primary"></i>Lịch sử SMS gần nhất</div>
+                        <div class="small text-secondary">Theo dõi các tin nhắn đã xử lý ở chế độ demo.</div>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="loadSmsLogs()">
+                        <i class="fas fa-sync-alt me-1"></i>Làm mới
+                    </button>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Thời gian</th>
+                                <th>Khách thuê</th>
+                                <th>SĐT gốc</th>
+                                <th>SĐT chuẩn hóa</th>
+                                <th>Nội dung</th>
+                                <th>Trạng thái</th>
+                                <th>Lỗi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="smsLogsBody">
+                            <tr><td colspan="7" class="text-center py-4 text-secondary">Đang tải lịch sử SMS...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -319,6 +349,7 @@
             smsModalInstance = new bootstrap.Modal(document.getElementById('smsModal'));
             loadData();
             loadAreas();
+            loadSmsLogs();
             
             const q = document.getElementById('q_resident_search');
             q.addEventListener('input', applyFilters);
@@ -387,6 +418,16 @@
             
             const regex = new RegExp(`(${query.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&')})`, 'gi');
             return text.replace(regex, '<mark class="p-0 bg-warning text-dark">$1</mark>');
+        }
+
+        function escapeHtml(value) {
+            return String(value || '').replace(/[&<>"']/g, (char) => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#39;'
+            }[char]));
         }
 
         function applyFilters() {
@@ -574,11 +615,59 @@
                 } else {
                     showToast(result.error || result.smsResult?.error || 'Không gửi được SMS.', 'error');
                 }
+                loadSmsLogs();
             } catch (e) {
                 showToast('Lỗi kết nối máy chủ!', 'error');
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = 'GỬI SMS';
+            }
+        }
+
+        function renderSmsLogs(logs) {
+            const body = document.getElementById('smsLogsBody');
+            if (!body) return;
+
+            if (!Array.isArray(logs) || logs.length === 0) {
+                body.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-secondary">Chưa có lịch sử gửi SMS.</td></tr>';
+                return;
+            }
+
+            body.innerHTML = logs.map(log => {
+                const isSuccess = log.status === 'success';
+                const statusClass = isSuccess ? 'bg-success' : 'bg-danger';
+                const statusText = isSuccess ? (log.isDemo ? 'Demo' : 'Đã gửi') : 'Lỗi';
+                const createdAt = log.createdAt ? new Date(log.createdAt).toLocaleString('vi-VN') : '---';
+
+                return `
+                    <tr>
+                        <td class="small text-secondary">${createdAt}</td>
+                        <td class="fw-bold small">${escapeHtml(log.HoTen || `ID ${log.idNguoiThue || '---'}`)}</td>
+                        <td class="small">${escapeHtml(log.phoneOriginal || '---')}</td>
+                        <td class="small text-info">${escapeHtml(log.phoneNormalized || '---')}</td>
+                        <td class="small" style="max-width: 280px;">${escapeHtml(log.message || '')}</td>
+                        <td><span class="badge ${statusClass}">${statusText}</span></td>
+                        <td class="small text-danger">${escapeHtml(log.errorMessage || '')}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        async function loadSmsLogs() {
+            const body = document.getElementById('smsLogsBody');
+            try {
+                const res = await fetch(`${API}/sms/logs?limit=10`);
+                const logs = await res.json();
+
+                if (!res.ok) {
+                    throw new Error(logs.error || 'Không tải được lịch sử SMS.');
+                }
+
+                renderSmsLogs(logs);
+            } catch (e) {
+                if (body) {
+                    body.innerHTML = `<tr><td colspan="7" class="text-center py-4 text-danger">${escapeHtml(e.message || 'Không tải được lịch sử SMS.')}</td></tr>`;
+                }
             }
         }
 

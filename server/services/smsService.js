@@ -18,7 +18,9 @@ function normalizeVietnamPhoneNumber(phone) {
     if (!phone) {
         return {
             success: false,
-            error: 'Thiếu số điện thoại nhận SMS.'
+            error: 'Thiếu số điện thoại nhận SMS.',
+            originalPhone: phone || null,
+            normalizedPhone: null
         };
     }
 
@@ -29,14 +31,18 @@ function normalizeVietnamPhoneNumber(phone) {
     if (!normalizedPhone) {
         return {
             success: false,
-            error: 'Số điện thoại nhận SMS không hợp lệ.'
+            error: 'Số điện thoại nhận SMS không hợp lệ.',
+            originalPhone,
+            normalizedPhone: null
         };
     }
 
     if (!/^\+?\d+$/.test(normalizedPhone)) {
         return {
             success: false,
-            error: 'Số điện thoại chỉ được chứa chữ số hoặc dấu + ở đầu.'
+            error: 'Số điện thoại chỉ được chứa chữ số hoặc dấu + ở đầu.',
+            originalPhone,
+            normalizedPhone
         };
     }
 
@@ -49,14 +55,18 @@ function normalizeVietnamPhoneNumber(phone) {
     } else {
         return {
             success: false,
-            error: 'Số điện thoại Việt Nam phải bắt đầu bằng 0, 84 hoặc +84.'
+            error: 'Số điện thoại Việt Nam phải bắt đầu bằng 0, 84 hoặc +84.',
+            originalPhone,
+            normalizedPhone
         };
     }
 
     if (!/^\+84\d{9,10}$/.test(normalizedPhone)) {
         return {
             success: false,
-            error: 'Số điện thoại Việt Nam không hợp lệ. Vui lòng nhập dạng 0xxxxxxxxx, 84xxxxxxxxx hoặc +84xxxxxxxxx.'
+            error: 'Số điện thoại Việt Nam không hợp lệ. Vui lòng nhập dạng 0xxxxxxxxx, 84xxxxxxxxx hoặc +84xxxxxxxxx.',
+            originalPhone,
+            normalizedPhone
         };
     }
 
@@ -77,7 +87,11 @@ async function sendSms(to, message) {
 
     const phoneResult = normalizeVietnamPhoneNumber(to);
     if (!phoneResult.success) {
-        return phoneResult;
+        return {
+            ...phoneResult,
+            to: phoneResult.originalPhone || to,
+            normalizedTo: phoneResult.normalizedPhone || null
+        };
     }
 
     const { originalPhone, normalizedPhone } = phoneResult;
@@ -96,7 +110,10 @@ async function sendSms(to, message) {
     if (!process.env.TWILIO_ACCOUNT_SID || !process.env.TWILIO_AUTH_TOKEN || !process.env.TWILIO_PHONE_NUMBER) {
         return {
             success: false,
-            error: 'Thiếu cấu hình Twilio trong biến môi trường.'
+            error: 'Thiếu cấu hình Twilio trong biến môi trường.',
+            to: originalPhone,
+            normalizedTo: normalizedPhone,
+            demo: false
         };
     }
 
@@ -111,13 +128,17 @@ async function sendSms(to, message) {
             success: true,
             sid: result.sid,
             to: normalizedPhone,
+            normalizedTo: normalizedPhone,
             originalTo: originalPhone
         };
     } catch (error) {
         console.error('[SMS ERROR]', error.message);
         return {
             success: false,
-            error: error.message
+            error: error.message,
+            to: originalPhone,
+            normalizedTo: normalizedPhone,
+            demo: false
         };
     }
 }
