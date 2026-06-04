@@ -353,7 +353,7 @@
             const month = Number(document.getElementById('bulkSmsMonth')?.value) || new Date().getMonth() + 1;
             const year = Number(document.getElementById('bulkSmsYear')?.value) || new Date().getFullYear();
             const cycle = `${String(month).padStart(2, '0')}/${year}`;
-            const preview = `Thong bao hoa don phong [SoPhong] thang ${cycle}: Tien phong/phu phi [x] VND, dien [soDien] so = [tienDien] VND, nuoc [soNuoc] so = [tienNuoc] VND, dich vu [tienDichVu] VND. Tong cong [tongTien] VND. [Trang thai thanh toan]`;
+            const preview = `Kinh gui quy khach [HoTen], hoa don phong [SoPhong] thang ${cycle} gom: tien phong/phu phi [x] VND, tien dien [soDien] so = [tienDien] VND, tien nuoc [soNuoc] so = [tienNuoc] VND, dich vu [tienDichVu] VND. Tong cong [tongTien] VND. [Trang thai thanh toan]`;
             const previewEl = document.getElementById('bulkSmsPreview');
             if (previewEl) previewEl.textContent = preview;
         }

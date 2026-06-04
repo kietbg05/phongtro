@@ -1151,9 +1151,9 @@ app.post('/api/sms/send-invoice-bulk', (req, res) => {
             const tienKhacHoacTienPhong = Math.max(tongTien - tienDien - tienNuoc - tienDichVu, 0);
             const isPaid = String(invoice.trangThai || '').trim() === 'Đã thanh toán';
             const endingText = isPaid
-                ? 'Hoa don da thanh toan. Cam on quy khach.'
-                : 'Vui long thanh toan dung han.';
-            const message = `Thong bao hoa don phong ${roomText} thang ${cycle}: Tien phong/phu phi ${formatMoney(tienKhacHoacTienPhong)} VND, dien ${soDien} so = ${formatMoney(tienDien)} VND, nuoc ${soNuoc} so = ${formatMoney(tienNuoc)} VND, dich vu ${formatMoney(tienDichVu)} VND. Tong cong ${formatMoney(tongTien)} VND. ${endingText}`;
+                ? 'Hoa don da duoc thanh toan. Cam on quy khach.'
+                : 'Vui long thanh toan dung han. Tran trong.';
+            const message = `Kinh gui quy khach ${invoice.HoTen || ''}, hoa don phong ${roomText} thang ${cycle} gom: tien phong/phu phi ${formatMoney(tienKhacHoacTienPhong)} VND, tien dien ${soDien} so = ${formatMoney(tienDien)} VND, tien nuoc ${soNuoc} so = ${formatMoney(tienNuoc)} VND, dich vu ${formatMoney(tienDichVu)} VND. Tong cong ${formatMoney(tongTien)} VND. ${endingText}`;
 
             let smsResult;
             try {
