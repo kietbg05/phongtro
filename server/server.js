@@ -1079,6 +1079,136 @@ app.get('/api/sms/logs', async (req, res) => {
     }
 });
 
+app.post('/api/sms/send-invoice-bulk', (req, res) => {
+    const month = Number(req.body.month);
+    const year = Number(req.body.year);
+
+    if (!Number.isInteger(month) || month < 1 || month > 12) {
+        return res.status(400).json({ error: 'Tháng gửi SMS không hợp lệ.' });
+    }
+
+    if (!Number.isInteger(year) || year < 2000 || year > 2100) {
+        return res.status(400).json({ error: 'Năm gửi SMS không hợp lệ.' });
+    }
+
+    const query = `
+        SELECT
+            h.idHoaDon,
+            nt.idNguoiThue,
+            nt.HoTen,
+            nt.SoDT,
+            p.SoPhong,
+            p.giaThue,
+            h.ngayLap,
+            h.tongTien,
+            h.trangThai,
+            h.dienCu,
+            h.dienMoi,
+            h.giaDien,
+            h.nuocCu,
+            h.nuocMoi,
+            h.giaNuoc,
+            h.tienDichVu
+        FROM HoaDon h
+        JOIN HopDong hd ON h.idHopDong = hd.idHopDong
+        JOIN NguoiThue nt ON hd.idNguoiThue = nt.idNguoiThue
+        JOIN Phong p ON hd.idPhong = p.idPhong
+        WHERE MONTH(h.ngayLap) = ? AND YEAR(h.ngayLap) = ?
+        ORDER BY p.SoPhong ASC, h.idHoaDon ASC
+    `;
+
+    db.query(query, [month, year], async (err, invoices) => {
+        if (err) return res.status(500).json({ error: err.message });
+
+        if (!invoices.length) {
+            return res.json({
+                success: true,
+                total: 0,
+                successCount: 0,
+                failedCount: 0,
+                message: `Không có hóa đơn trong tháng ${month}/${year}.`,
+                results: []
+            });
+        }
+
+        const cycle = `${String(month).padStart(2, '0')}/${year}`;
+        const results = [];
+        let successCount = 0;
+        let failedCount = 0;
+        const moneyValue = value => Number(value || 0) || 0;
+        const formatMoney = value => new Intl.NumberFormat('vi-VN', {
+            maximumFractionDigits: 0
+        }).format(Math.round(moneyValue(value)));
+
+        for (const invoice of invoices) {
+            const roomText = invoice.SoPhong || '---';
+            const soDien = moneyValue(invoice.dienMoi) - moneyValue(invoice.dienCu);
+            const tienDien = soDien * moneyValue(invoice.giaDien);
+            const soNuoc = moneyValue(invoice.nuocMoi) - moneyValue(invoice.nuocCu);
+            const tienNuoc = soNuoc * moneyValue(invoice.giaNuoc);
+            const tienDichVu = moneyValue(invoice.tienDichVu);
+            const tongTien = moneyValue(invoice.tongTien);
+            const tienKhacHoacTienPhong = Math.max(tongTien - tienDien - tienNuoc - tienDichVu, 0);
+            const isPaid = String(invoice.trangThai || '').trim() === 'Đã thanh toán';
+            const endingText = isPaid
+                ? 'Hoa don da thanh toan. Cam on quy khach.'
+                : 'Vui long thanh toan dung han.';
+            const message = `Thong bao hoa don phong ${roomText} thang ${cycle}: Tien phong/phu phi ${formatMoney(tienKhacHoacTienPhong)} VND, dien ${soDien} so = ${formatMoney(tienDien)} VND, nuoc ${soNuoc} so = ${formatMoney(tienNuoc)} VND, dich vu ${formatMoney(tienDichVu)} VND. Tong cong ${formatMoney(tongTien)} VND. ${endingText}`;
+
+            let smsResult;
+            try {
+                smsResult = await sendSms(invoice.SoDT, message, { forceDemo: true });
+            } catch (sendError) {
+                smsResult = {
+                    success: false,
+                    error: sendError.message,
+                    to: invoice.SoDT,
+                    normalizedTo: null,
+                    demo: true
+                };
+            }
+
+            const status = smsResult.success ? 'success' : 'failed';
+            if (smsResult.success) successCount += 1;
+            else failedCount += 1;
+
+            try {
+                await saveSmsLog({
+                    idNguoiThue: invoice.idNguoiThue,
+                    phoneOriginal: smsResult.originalTo || smsResult.to || invoice.SoDT,
+                    phoneNormalized: smsResult.normalizedTo || null,
+                    message,
+                    status,
+                    errorMessage: smsResult.error || null,
+                    isDemo: true
+                });
+            } catch (logError) {
+                console.error('[SMS LOG] Không thể lưu lịch sử SMS hóa đơn:', logError.message);
+            }
+
+            results.push({
+                idHoaDon: invoice.idHoaDon,
+                idNguoiThue: invoice.idNguoiThue,
+                HoTen: invoice.HoTen,
+                SoPhong: invoice.SoPhong,
+                phoneOriginal: smsResult.originalTo || smsResult.to || invoice.SoDT,
+                phoneNormalized: smsResult.normalizedTo || null,
+                status,
+                errorMessage: smsResult.error || null,
+                isDemo: true
+            });
+        }
+
+        res.json({
+            success: true,
+            total: invoices.length,
+            successCount,
+            failedCount,
+            results
+        });
+    });
+});
+
 // --- API XÁC THỰC (LOGIN) ---
 app.post('/api/admin/create-tenant-account', (req, res) => {
     const { idNguoiThue, username, password } = req.body;

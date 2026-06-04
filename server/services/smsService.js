@@ -77,7 +77,7 @@ function normalizeVietnamPhoneNumber(phone) {
     };
 }
 
-async function sendSms(to, message) {
+async function sendSms(to, message, options = {}) {
     if (!message) {
         return {
             success: false,
@@ -96,7 +96,7 @@ async function sendSms(to, message) {
 
     const { originalPhone, normalizedPhone } = phoneResult;
 
-    if (process.env.SMS_ENABLED !== 'true') {
+    if (options.forceDemo || process.env.SMS_ENABLED !== 'true') {
         console.log(`[SMS DEMO] Original To: ${originalPhone} | Normalized To: ${normalizedPhone} | Message: ${message}`);
         return {
             success: true,

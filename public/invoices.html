@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hóa Đơn | Hệ Thống Quản Lý Phòng Trọ</title>
+    <title>Hóa Đơn | Quản Lý Phòng</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -15,16 +15,24 @@
         #serviceListContainer::-webkit-scrollbar { display: none; }
         #serviceListContainer { -ms-overflow-style: none; scrollbar-width: none; overflow: visible !important; }
     </style>
+    <script src="js/theme.js"></script>
+    <script src="js/toast.js"></script>
 </head>
 <body>
+    <!-- Honeypot to trick browser autofill -->
+    <div style="position: fixed; top: -1000px; left: -1000px; opacity: 0; pointer-events: none;">
+        <input type="text" name="username" tabindex="-1">
+        <input type="password" name="password" tabindex="-1">
+    </div>
 
     <div class="wrapper d-flex">
         <!-- Sidebar -->
-        <nav id="sidebar">
+                <nav id="sidebar">
             <div class="sidebar-header">
-                <i class="fas fa-home-user me-2"></i> QUẢN LÝ PHÒNG
+                <i class="fas fa-house-user me-2"></i> QUẢN LÝ PHÒNG
             </div>
-            <ul class="list-unstyled components">
+
+            <ul class="list-unstyled components mb-0">
                 <li><a href="index.html"><i class="fas fa-tachometer-alt me-2"></i> Tổng quan</a></li>
                 <li><a href="areas.html"><i class="fas fa-building me-2"></i> Khu trọ</a></li>
                 <li><a href="rooms.html"><i class="fas fa-door-open me-2"></i> Phòng trọ</a></li>
@@ -33,68 +41,163 @@
                 <li><a href="services.html"><i class="fas fa-concierge-bell me-2"></i> Dịch vụ/Phí</a></li>
                 <li><a href="contracts.html"><i class="fas fa-file-contract me-2"></i> Hợp đồng</a></li>
                 <li class="active"><a href="invoices.html"><i class="fas fa-file-invoice-dollar me-2"></i> Hóa đơn</a></li>
-                <li><a href="login.html" onclick="logout()"><i class="fas fa-sign-out-alt me-2"></i> Đăng xuất</a></li>
+                <li><a href="admin_baocao.html"><i class="fas fa-tools me-2"></i> Hệ thống hỗ trợ</a></li>
+            </ul>
+        
+            <ul class="list-unstyled mt-auto border-top border-secondary pt-3" style="border-color: var(--glass-border) !important;">
+                <li>
+                    <a href="#" id="theme-toggle" class="d-flex align-items-center justify-content-between text-decoration-none">
+                        <span><i class="fas fa-adjust me-2"></i> Giao diện</span>
+                        <i class="fas fa-sun" id="theme-icon"></i>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" data-bs-toggle="modal" data-bs-target="#changePasswordModal"><i class="fas fa-key me-2"></i> Đổi mật khẩu</a>
+                </li>
+                <li>
+                    <a href="login.html" onclick="localStorage.removeItem('user')"><i class="fas fa-sign-out-alt me-2 text-danger"></i> <span class="text-danger">Đăng xuất</span></a>
+                </li>
             </ul>
         </nav>
 
         <!-- Page Content -->
         <div id="content">
-            <header class="d-flex justify-content-between align-items-center mb-4">
-                <h2 class="animate-fade-in">Quản Lý Hóa Đơn</h2>
-                <button class="btn btn-primary" onclick="openAddInvoiceModal()">
-                    <i class="fas fa-plus me-2"></i> Lập Hóa Đơn Tháng
-                </button>
+            <div class="island-container">
+                <div id="dynamicIsland" class="dynamic-island">
+                    <div class="island-content" id="islandContent"></div>
+                </div>
+            </div>
+
+            <header class="d-flex justify-content-between align-items-center mb-5">
+                <div>
+                    <h2 class="animate-bento" style="font-family: var(--font-display); font-weight: 700;">Quản Lý Hóa Đơn</h2>
+                    <p class="text-secondary small">Quản lý dòng tiền và thanh toán của khách thuê.</p>
+                </div>
+                <div class="user-info d-flex align-items-center gap-3">
+                    <button class="btn btn-outline-primary" onclick="openBulkInvoiceSmsModal()">
+                        <i class="fas fa-sms me-2"></i> Gửi SMS hóa đơn hàng loạt
+                    </button>
+                    <button class="btn btn-primary" onclick="openAddInvoiceModal()">
+                        <i class="fas fa-plus me-2"></i> Lập Hóa Đơn Tháng
+                    </button>
+                </div>
             </header>
 
-            <div class="card animate-fade-in shadow-lg border-0 mb-4">
-                <!-- Bộ lọc chuyên nghiệp cho Hóa đơn -->
-                <div class="px-3 py-3" style="background: linear-gradient(135deg, rgba(30,40,60,0.8), rgba(20,30,50,0.9)); border-bottom: 1px solid rgba(255,255,255,0.05);">
-                    <div class="d-flex align-items-center mb-2">
-                        <i class="fas fa-filter text-info me-2" style="font-size: 0.75rem;"></i>
-                        <span class="text-secondary small fw-bold text-uppercase" style="letter-spacing: 1px; font-size: 0.7rem;">Bộ lọc hóa đơn</span>
+            <!-- Invoice Management Card -->
+            <div class="card animate-bento" style="animation-delay: 0.1s; padding: 0;">
+                <div class="p-4 d-flex justify-content-between align-items-center border-bottom border-secondary" style="border-color: var(--glass-border) !important;">
+                    <h5 class="chart-title mb-0">Lịch sử hóa đơn</h5>
+                    <div class="d-flex gap-2">
+                         <div class="input-group input-group-sm premium-search-group" style="width: 250px;">
+                            <span class="input-group-text border-0 bg-transparent"><i class="fas fa-search text-secondary"></i></span>
+                            <input type="text" id="q_invoice_search" class="form-control border-0 bg-transparent" placeholder="Số phòng..." oninput="filterInvoices()" autocomplete="off" spellcheck="false" readonly onfocus="this.removeAttribute('readonly');">
+                        </div>
                     </div>
-                    <div class="row g-3 align-items-end">
-                        <div class="col-md-3">
-                            <label class="form-label text-secondary small mb-1"><i class="fas fa-door-open me-1"></i>Số phòng</label>
-                            <input type="text" id="filterInvRoom" class="form-control bg-dark text-white border-secondary rounded-3" placeholder="Nhập số phòng..." oninput="filterInvoices()" style="border-color: rgba(255,255,255,0.1) !important;">
+                </div>
+
+                <!-- Filters -->
+                <div class="p-4 border-bottom" style="border-color: var(--glass-border) !important;">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <div class="dropdown w-100">
+                                <button class="form-select text-start d-flex align-items-center justify-content-between" type="button" id="cycleDropdown" data-bs-toggle="dropdown">
+                                    <span id="selectedCycleText">Tất cả các tháng</span>
+                                </button>
+                                <ul class="dropdown-menu w-100 shadow-lg" id="cycleDropdownMenu">
+                                    <li><a class="dropdown-item" href="javascript:void(0)" onclick="setCycleFilter('', 'Tất cả các tháng')">Tất cả các tháng</a></li>
+                                </ul>
+                                <input type="hidden" id="filterInvCycle" value="" onchange="filterInvoices()">
+                            </div>
                         </div>
-                        <div class="col-md-3">
-                            <label class="form-label text-secondary small mb-1"><i class="fas fa-calendar-alt me-1"></i>Kỳ thanh toán</label>
-                            <select id="filterInvCycle" class="form-select bg-dark text-white border-secondary rounded-3" onchange="filterInvoices()" style="border-color: rgba(255,255,255,0.1) !important;">
-                                <option value="">Tất cả các tháng</option>
-                            </select>
+                        <div class="col-md-4">
+                            <div class="dropdown w-100">
+                                <button class="form-select text-start d-flex align-items-center justify-content-between" type="button" id="invStatusDropdown" data-bs-toggle="dropdown">
+                                    <span id="selectedInvStatusText">Tất cả trạng thái</span>
+                                </button>
+                                <ul class="dropdown-menu w-100 shadow-lg">
+                                    <li><a class="dropdown-item d-flex align-items-center" href="javascript:void(0)" onclick="setInvStatusFilter('', 'Tất cả trạng thái')">Tất cả trạng thái</a></li>
+                                    <li><a class="dropdown-item d-flex align-items-center" href="javascript:void(0)" onclick="setInvStatusFilter('Chưa thanh toán', 'Chưa thanh toán', 'status-dot-overdue')">
+                                        <span class="status-dot status-dot-overdue"></span>Chưa thanh toán
+                                    </a></li>
+                                    <li><a class="dropdown-item d-flex align-items-center" href="javascript:void(0)" onclick="setInvStatusFilter('Đã thanh toán', 'Đã thanh toán', 'status-dot-rented')">
+                                        <span class="status-dot status-dot-rented"></span>Đã thanh toán
+                                    </a></li>
+                                </ul>
+                                <input type="hidden" id="filterInvStatus" value="" onchange="filterInvoices()">
+                            </div>
                         </div>
-                        <div class="col-md-3">
-                            <label class="form-label text-secondary small mb-1"><i class="fas fa-receipt me-1"></i>Trạng thái</label>
-                            <select id="filterInvStatus" class="form-select bg-dark text-white border-secondary rounded-3" onchange="filterInvoices()" style="border-color: rgba(255,255,255,0.1) !important;">
-                                <option value="">Tất cả trạng thái</option>
-                                <option value="Chưa thanh toán">🔴 Chưa thanh toán</option>
-                                <option value="Đã thanh toán">🟢 Đã thanh toán</option>
-                            </select>
-                        </div>
-                        <div class="col-md-3 text-end">
-                            <button class="btn btn-outline-info w-100 rounded-3" onclick="clearInvFilters()" style="border-color: rgba(255,255,255,0.15);">
-                                <i class="fas fa-redo me-1"></i> Đặt lại
+                        <div class="col-md-4 text-end">
+                            <button class="btn btn-outline-secondary w-100" onclick="clearInvFilters()">
+                                <i class="fas fa-redo me-2"></i> Đặt lại
                             </button>
                         </div>
                     </div>
                 </div>
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-hover mb-0" id="invoiceTable">
-                            <thead>
-                                <tr>
-                                    <th>Phòng</th>
-                                    <th>Kỳ Thanh Toán</th>
-                                    <th>Số Tiền</th>
-                                    <th>Ngày Lập</th>
-                                    <th>Trạng Thái</th>
-                                    <th>Hành Động</th>
-                                </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
+
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0" id="invoiceTable">
+                        <thead>
+                            <tr>
+                                <th>Phòng</th>
+                                <th>Kỳ Thanh Toán</th>
+                                <th>Số Tiền</th>
+                                <th>Ngày Lập</th>
+                                <th>Trạng Thái</th>
+                                <th>Hành Động</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        </div>
+    </div>
+
+    <!-- Modal gửi SMS hóa đơn hàng loạt -->
+    <div class="modal fade" id="bulkInvoiceSmsModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content border-secondary">
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title"><i class="fas fa-sms me-2 text-primary"></i>Gửi SMS hóa đơn hàng loạt</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Tháng</label>
+                            <select class="form-select" id="bulkSmsMonth" onchange="updateBulkSmsPreview()">
+                                <option value="1">Tháng 1</option>
+                                <option value="2">Tháng 2</option>
+                                <option value="3">Tháng 3</option>
+                                <option value="4">Tháng 4</option>
+                                <option value="5">Tháng 5</option>
+                                <option value="6">Tháng 6</option>
+                                <option value="7">Tháng 7</option>
+                                <option value="8">Tháng 8</option>
+                                <option value="9">Tháng 9</option>
+                                <option value="10">Tháng 10</option>
+                                <option value="11">Tháng 11</option>
+                                <option value="12">Tháng 12</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Năm</label>
+                            <input type="number" class="form-control" id="bulkSmsYear" min="2000" max="2100" oninput="updateBulkSmsPreview()">
+                        </div>
                     </div>
+                    <div class="mt-3">
+                        <label class="form-label">Nội dung SMS mẫu</label>
+                        <div class="form-control bg-transparent small" id="bulkSmsPreview" style="min-height: 86px; white-space: normal;"></div>
+                    </div>
+                    <div id="bulkSmsResult" class="mt-4"></div>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                    <button type="button" class="btn btn-primary" id="btnSendBulkInvoiceSms" onclick="confirmBulkInvoiceSms()">
+                        Gửi SMS demo
+                    </button>
                 </div>
             </div>
         </div>
@@ -103,50 +206,50 @@
     <!-- Modal Lập Hóa Đơn -->
     <div class="modal fade" id="addInvoiceModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog">
-            <div class="modal-content bg-dark text-white border-secondary">
+            <div class="modal-content border-secondary">
                 <div class="modal-header border-secondary">
                     <h5 class="modal-title">Tạo Hóa Đơn Mới</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    <button type="button" class="btn-close " data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <form id="invoiceForm">
                         <input type="hidden" id="editInvoiceId">
                         <div class="mb-3">
                             <label class="form-label">Chọn Hợp Đồng / Phòng</label>
-                            <select class="form-select bg-dark text-white border-secondary" id="selectContract" required></select>
+                            <select class="form-select" id="selectContract" required></select>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Ngày Lập Hóa Đơn</label>
-                            <input type="text" class="form-control bg-dark text-white border-secondary datepicker" id="invoiceDate" placeholder="dd/mm/yyyy" required>
+                            <input type="text" class="form-control datepicker" id="invoiceDate" placeholder="dd/mm/yyyy" required>
                         </div>
                         <div class="row">
                             <div class="col-6 mb-3">
                                 <label class="label-small text-info">Số Điện (Cũ)</label>
-                                <input type="number" class="form-control bg-dark text-white border-secondary" id="dienCu" value="0">
+                                <input type="number" class="form-control" id="dienCu" value="0">
                             </div>
                             <div class="col-6 mb-3">
                                 <label class="label-small text-info">Số Điện (Mới)</label>
-                                <input type="number" class="form-control bg-dark text-white border-secondary" id="dienMoi" required>
+                                <input type="number" class="form-control" id="dienMoi" required>
                             </div>
                         </div>
                         <div class="row">
                             <div class="col-6 mb-3">
                                 <label class="label-small text-info">Số Nước (Cũ)</label>
-                                <input type="number" class="form-control bg-dark text-white border-secondary" id="nuocCu" value="0">
+                                <input type="number" class="form-control" id="nuocCu" value="0">
                             </div>
                             <div class="col-6 mb-3">
                                 <label class="label-small text-info">Số Nước (Mới)</label>
-                                <input type="number" class="form-control bg-dark text-white border-secondary" id="nuocMoi" required>
+                                <input type="number" class="form-control" id="nuocMoi" required>
                             </div>
                         </div>
                         <div class="row">
                             <div class="col-6 mb-3">
                                 <label class="label-small text-secondary">Giá Điện (đ/kWh)</label>
-                                <input type="number" class="form-control bg-dark text-white border-secondary" id="giaDien" value="3500">
+                                <input type="number" class="form-control" id="giaDien" value="3500">
                             </div>
                             <div class="col-6 mb-3">
                                 <label class="label-small text-secondary">Giá Nước (đ/m3)</label>
-                                <input type="number" class="form-control bg-dark text-white border-secondary" id="giaNuoc" value="15000">
+                                <input type="number" class="form-control" id="giaNuoc" value="15000">
                             </div>
                         </div>
                         <div class="mb-3">
@@ -174,6 +277,8 @@
     <script>
         const API_URL = '/api';
 
+        // showToast() is provided globally by js/toast.js
+
         document.addEventListener('DOMContentLoaded', () => {
             fetchInvoices();
             loadContracts();
@@ -187,29 +292,190 @@
                 monthSelectorType: "dropdown"
             });
 
-            // Tự động load chỉ số cũ khi chọn hợp đồng
+            // Tự động load chỉ số cũ và dịch vụ cũ khi chọn hợp đồng
             document.getElementById('selectContract').addEventListener('change', async function() {
                 const id = this.value;
                 if (!id) return;
                 try {
+                    // 1. Lấy chỉ số điện nước
                     const res = await fetch(`${API_URL}/hopdong/${id}/last-meter`);
                     const data = await res.json();
                     document.getElementById('dienCu').value = data.dienMoi || 0;
                     document.getElementById('nuocCu').value = data.nuocMoi || 0;
-                    // Reset số mới để tránh lỗi
                     document.getElementById('dienMoi').value = data.dienMoi || 0;
                     document.getElementById('nuocMoi').value = data.nuocMoi || 0;
-                } catch (err) { console.error('Lỗi lấy chỉ số cũ:', err); }
+
+                    // 2. Lấy dịch vụ đã dùng gần nhất (Để đồng bộ "Dịch vụ đang dùng")
+                    const svRes = await fetch(`${API_URL}/hopdong/${id}/last-services`);
+                    const lastServices = await svRes.json();
+                    
+                    // Reset all checks first
+                    document.querySelectorAll('.service-check').forEach(cb => {
+                        cb.checked = false;
+                        toggleQtyInput(cb.value);
+                    });
+
+                    if (lastServices && lastServices.length > 0) {
+                        lastServices.forEach(ls => {
+                            const cb = document.getElementById(`svc_${ls.idDichVu}`);
+                            if (cb) {
+                                cb.checked = true;
+                                toggleQtyInput(ls.idDichVu);
+                                const qtyInput = document.getElementById(`qty_${ls.idDichVu}`);
+                                if (qtyInput) qtyInput.value = ls.soLuong;
+                            }
+                        });
+                    } else {
+                        // Nếu chưa từng có hóa đơn, mặc định chọn tất cả
+                        document.querySelectorAll('.service-check').forEach(cb => {
+                            cb.checked = true;
+                            toggleQtyInput(cb.value);
+                        });
+                    }
+                } catch (err) { console.error('Lỗi lấy dữ liệu hợp đồng:', err); }
             });
         });
 
         let allServices = [];
+        let bulkInvoiceSmsModal = null;
+
+        function openBulkInvoiceSmsModal() {
+            const now = new Date();
+            document.getElementById('bulkSmsMonth').value = String(now.getMonth() + 1);
+            document.getElementById('bulkSmsYear').value = String(now.getFullYear());
+            document.getElementById('bulkSmsResult').innerHTML = '';
+            updateBulkSmsPreview();
+            bulkInvoiceSmsModal = bootstrap.Modal.getInstance(document.getElementById('bulkInvoiceSmsModal')) || new bootstrap.Modal(document.getElementById('bulkInvoiceSmsModal'));
+            bulkInvoiceSmsModal.show();
+        }
+
+        function updateBulkSmsPreview() {
+            const month = Number(document.getElementById('bulkSmsMonth')?.value) || new Date().getMonth() + 1;
+            const year = Number(document.getElementById('bulkSmsYear')?.value) || new Date().getFullYear();
+            const cycle = `${String(month).padStart(2, '0')}/${year}`;
+            const preview = `Thong bao hoa don phong [SoPhong] thang ${cycle}: Tien phong/phu phi [x] VND, dien [soDien] so = [tienDien] VND, nuoc [soNuoc] so = [tienNuoc] VND, dich vu [tienDichVu] VND. Tong cong [tongTien] VND. [Trang thai thanh toan]`;
+            const previewEl = document.getElementById('bulkSmsPreview');
+            if (previewEl) previewEl.textContent = preview;
+        }
+
+        function confirmBulkInvoiceSms() {
+            const month = Number(document.getElementById('bulkSmsMonth').value);
+            const year = Number(document.getElementById('bulkSmsYear').value);
+
+            if (!month || !year) {
+                showToast('Vui lòng chọn tháng và năm gửi SMS.', 'warning');
+                return;
+            }
+
+            showConfirm(`Gửi SMS demo báo hóa đơn tháng ${month}/${year} cho tất cả hóa đơn trong kỳ này?`, () => {
+                sendBulkInvoiceSms(month, year);
+            });
+        }
+
+        function escapeHtml(value) {
+            return String(value || '').replace(/[&<>"']/g, (char) => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#39;'
+            }[char]));
+        }
+
+        function renderBulkSmsResult(result) {
+            const box = document.getElementById('bulkSmsResult');
+            const failed = (result.results || []).filter(item => item.status !== 'success');
+            const errorRows = failed.length ? `
+                <div class="mt-3">
+                    <div class="fw-bold small text-danger mb-2">Danh sách lỗi</div>
+                    <div class="table-responsive">
+                        <table class="table table-sm mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Hóa đơn</th>
+                                    <th>Phòng</th>
+                                    <th>Khách thuê</th>
+                                    <th>SĐT</th>
+                                    <th>Lỗi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${failed.map(item => `
+                                    <tr>
+                                        <td>#${item.idHoaDon || '---'}</td>
+                                        <td>${escapeHtml(item.SoPhong || '---')}</td>
+                                        <td>${escapeHtml(item.HoTen || '---')}</td>
+                                        <td>${escapeHtml(item.phoneOriginal || '---')}</td>
+                                        <td class="text-danger">${escapeHtml(item.errorMessage || 'Không gửi được SMS.')}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            ` : '';
+
+            box.innerHTML = `
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <div class="p-3 rounded border border-secondary">
+                            <div class="small text-secondary">Tổng hóa đơn</div>
+                            <div class="h4 mb-0">${result.total || 0}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="p-3 rounded border border-success">
+                            <div class="small text-secondary">Gửi thành công</div>
+                            <div class="h4 mb-0 text-success">${result.successCount || 0}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="p-3 rounded border border-danger">
+                            <div class="small text-secondary">Gửi thất bại</div>
+                            <div class="h4 mb-0 text-danger">${result.failedCount || 0}</div>
+                        </div>
+                    </div>
+                </div>
+                ${result.message ? `<div class="alert alert-info mt-3 mb-0">${escapeHtml(result.message)}</div>` : ''}
+                ${errorRows}
+            `;
+        }
+
+        async function sendBulkInvoiceSms(month, year) {
+            const btn = document.getElementById('btnSendBulkInvoiceSms');
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Đang gửi demo...';
+
+            try {
+                const res = await fetch(`${API_URL}/sms/send-invoice-bulk`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ month, year })
+                });
+                const result = await res.json();
+
+                if (!res.ok) {
+                    throw new Error(result.error || 'Không gửi được SMS hóa đơn.');
+                }
+
+                renderBulkSmsResult(result);
+                showToast(`Đã xử lý SMS demo: ${result.successCount || 0}/${result.total || 0} hóa đơn.`, result.failedCount ? 'warning' : 'success');
+            } catch (error) {
+                document.getElementById('bulkSmsResult').innerHTML = `<div class="alert alert-danger mb-0">${escapeHtml(error.message)}</div>`;
+                showToast(error.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        }
+
         async function fetchServices() {
             try {
                 const res = await fetch(`${API_URL}/dichvu`);
                 allServices = await res.json();
                 const container = document.getElementById('serviceListContainer');
-                container.innerHTML = allServices.map(s => `
+                let html = allServices.map(s => `
                     <div class="row g-0 mx-0 align-items-center mb-2">
                         <div class="col-7 p-0">
                             <div class="form-check small">
@@ -221,15 +487,44 @@
                         </div>
                         <div class="col-5">
                             <div class="input-group input-group-sm">
-                                <span class="input-group-text bg-dark border-secondary text-white-50">SL</span>
-                                <input type="number" class="form-control bg-dark text-white border-secondary service-qty" 
+                                <span class="input-group-text -50">SL</span>
+                                <input type="number" class="form-control service-qty" 
                                        id="qty_${s.idDichVu}" value="1" min="1" disabled>
                             </div>
                         </div>
                     </div>
                 `).join('');
-                if (allServices.length === 0) container.innerHTML = '<p class="text-muted small mb-0">Không có dịch vụ định nghĩa.</p>';
+                if (allServices.length === 0) html = '<p class="text-muted small mb-0">Không có dịch vụ định nghĩa.</p>';
+                
+                html += `
+                    <div id="customFeesContainer"></div>
+                    <div class="mt-2 text-end">
+                        <button type="button" class="btn btn-sm btn-outline-primary py-0" onclick="addCustomFeeRow()">
+                            <i class="fas fa-plus"></i> Thêm phụ phí khác
+                        </button>
+                    </div>
+                `;
+                container.innerHTML = html;
             } catch (err) { console.error(err); }
+        }
+
+        function addCustomFeeRow(name = '', amount = '') {
+            const container = document.getElementById('customFeesContainer');
+            if (!container) return;
+            const row = document.createElement('div');
+            row.className = 'row g-2 mb-2 custom-fee-row align-items-center';
+            row.innerHTML = `
+                <div class="col-6">
+                    <input type="text" class="form-control form-control-sm custom-fee-name" placeholder="Tên phụ phí (vd: Đền bù)" value="${name}">
+                </div>
+                <div class="col-5">
+                    <input type="number" class="form-control form-control-sm custom-fee-amount" placeholder="Số tiền" value="${amount}">
+                </div>
+                <div class="col-1 text-end p-0">
+                    <button type="button" class="btn btn-sm btn-outline-danger py-0 px-2" onclick="this.closest('.custom-fee-row').remove()"><i class="fas fa-times"></i></button>
+                </div>
+            `;
+            container.appendChild(row);
         }
 
         function toggleQtyInput(id) {
@@ -245,15 +540,21 @@
                 if (!res.ok) throw new Error('Lỗi tải hóa đơn');
                 allInvoices = await res.json();
                 
-                // Populate cycle filter
-                const filterCycle = document.getElementById('filterInvCycle');
-                if (filterCycle) {
+                // Populate custom cycle filter dropdown
+                const cycleMenu = document.getElementById('cycleDropdownMenu');
+                if (cycleMenu) {
                     const cycles = [...new Set(allInvoices.map(inv => {
                         const d = new Date(inv.ngayLap);
                         return `Tháng ${d.getMonth() + 1}/${d.getFullYear()}`;
-                    }))].sort();
-                    filterCycle.innerHTML = '<option value="">Tất cả các tháng</option>' + 
-                        cycles.map(c => `<option value="${c}">${c}</option>`).join('');
+                    }))].sort((a, b) => {
+                        // Sort by year then month (e.g., "Tháng 5/2024" vs "Tháng 4/2024")
+                        const [ma, ya] = a.split(' ')[1].split('/').map(Number);
+                        const [mb, yb] = b.split(' ')[1].split('/').map(Number);
+                        return ya !== yb ? yb - ya : mb - ma;
+                    });
+                    
+                    cycleMenu.innerHTML = `<li><a class="dropdown-item" href="javascript:void(0)" onclick="setCycleFilter('', 'Tất cả các tháng')">Tất cả các tháng</a></li>` + 
+                        cycles.map(c => `<li><a class="dropdown-item" href="javascript:void(0)" onclick="setCycleFilter('${c}', '${c}')">${c}</a></li>`).join('');
                 }
 
                 renderInvoiceTable(allInvoices);
@@ -261,7 +562,7 @@
         }
 
         function filterInvoices() {
-            const room = (document.getElementById('filterInvRoom')?.value || '').toLowerCase();
+            const room = (document.getElementById('q_invoice_search')?.value || '').toLowerCase();
             const cycle = document.getElementById('filterInvCycle')?.value || '';
             const status = document.getElementById('filterInvStatus')?.value || '';
 
@@ -293,28 +594,31 @@
                 return;
             }
 
-            tbody.innerHTML = data.map((inv, index) => `
+            tbody.innerHTML = data.map((inv, index) => {
+                const isPaid = inv.trangThai !== 'Chưa thanh toán';
+                return `
                 <tr>
                     <td><strong>${inv.SoPhong}</strong></td>
                     <td>Tháng ${new Date(inv.ngayLap).getMonth() + 1}/${new Date(inv.ngayLap).getFullYear()}</td>
                     <td class="text-warning fw-bold">${new Intl.NumberFormat('vi-VN').format(inv.tongTien)} đ</td>
                     <td>${new Date(inv.ngayLap).toLocaleDateString('vi-VN')}</td>
                     <td>
-                        <span class="badge ${inv.trangThai === 'Chưa thanh toán' ? 'bg-danger' : 'bg-success'}">
-                            ${inv.trangThai}
-                        </span>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="status-dot ${isPaid ? 'status-dot-rented' : 'status-dot-overdue'}"></span>
+                            <span class="small">${inv.trangThai}</span>
+                        </div>
                     </td>
                     <td>
                         <div class="d-flex gap-1">
                             <button class="btn btn-sm btn-outline-info" title="In" onclick="printInvoiceByIndex(${index})"><i class="fas fa-print"></i></button>
                             <button class="btn btn-sm btn-outline-warning" title="Sửa" onclick="openEditInvoiceByIndex(${index})"><i class="fas fa-edit"></i></button>
                             <button class="btn btn-sm btn-outline-danger" title="Xóa" onclick="deleteInvoice(${inv.idHoaDon})"><i class="fas fa-trash"></i></button>
-                            ${inv.trangThai === 'Chưa thanh toán' ? 
+                            ${!isPaid ? 
                                 `<button class="btn btn-sm btn-success px-2 py-0" style="font-size: 0.75rem" onclick="payInvoice(${inv.idHoaDon})">Ghi thu</button>` : ''}
                         </div>
                     </td>
                 </tr>
-            `).join('');
+            `}).join('');
         }
 
 
@@ -334,6 +638,18 @@
         async function submitInvoice() {
             const editId = document.getElementById('editInvoiceId').value;
             const dateStr = document.getElementById('invoiceDate').value;
+            const btnSubmit = document.getElementById('btnSubmitInvoice');
+            
+            if (!dateStr || !document.getElementById('selectContract').value) {
+                showToast('Vui lòng chọn ngày và hợp đồng!', 'warning');
+                return;
+            }
+
+            // Khóa nút bấm để tránh gửi trùng
+            const originalBtnText = btnSubmit.innerText;
+            btnSubmit.disabled = true;
+            btnSubmit.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Đang xử lý...';
+
             const parts = dateStr.split('/');
             const formattedDate = parts.length === 3 ? `${parts[2]}-${parts[1]}-${parts[0]}` : dateStr;
 
@@ -343,6 +659,19 @@
                 const qty = document.getElementById(`qty_${cb.value}`).value || 1;
                 if (service) {
                     selectedServices.push({ ...service, customQty: Number(qty) });
+                }
+            });
+
+            document.querySelectorAll('.custom-fee-row').forEach(row => {
+                const name = row.querySelector('.custom-fee-name').value.trim();
+                const amount = Number(row.querySelector('.custom-fee-amount').value);
+                if (name && amount > 0) {
+                    selectedServices.push({
+                        isCustom: true,
+                        TenDichVu: name,
+                        Gia: amount,
+                        customQty: 1
+                    });
                 }
             });
 
@@ -370,23 +699,27 @@
                 });
                 const result = await res.json();
                 if (res.ok) { 
-                    alert(editId ? 'Đã cập nhật hóa đơn!' : 'Đã tạo hóa đơn!'); 
-                    location.reload(); 
+                    showToast(editId ? 'Đã cập nhật hóa đơn!' : 'Đã tạo hóa đơn!'); 
+                    setTimeout(() => location.reload(), 1500); 
                 } else {
-                    alert('Lỗi: ' + (result.error || 'Không thể lưu hóa đơn.'));
+                    showToast('Lỗi: ' + (result.error || 'Không thể lưu hóa đơn.'), 'error');
+                    btnSubmit.disabled = false;
+                    btnSubmit.innerText = originalBtnText;
                 }
-            } catch (error) { alert('Lỗi kết nối máy chủ!'); }
+            } catch (error) { 
+                showToast('Lỗi kết nối máy chủ!', 'error');
+                btnSubmit.disabled = false;
+                btnSubmit.innerText = originalBtnText;
+            }
         }
 
         function openAddInvoiceModal() {
             document.getElementById('editInvoiceId').value = '';
             document.getElementById('invoiceForm').reset();
+            document.querySelectorAll('.custom-fee-row').forEach(row => row.remove());
             
-            // Tự động chọn tất cả dịch vụ
-            document.querySelectorAll('.service-check').forEach(cb => {
-                cb.checked = true;
-                toggleQtyInput(cb.value);
-            });
+            // Kích hoạt lại việc load dữ liệu cho hợp đồng đang được chọn
+            document.getElementById('selectContract').dispatchEvent(new Event('change'));
             
             document.querySelector('#addInvoiceModal .modal-title').innerText = 'Tạo Hóa Đơn Mới';
             document.getElementById('btnSubmitInvoice').innerText = 'Xuất Hóa Đơn';
@@ -411,16 +744,22 @@
 
             // Load và chọn các dịch vụ đã lưu
             document.querySelectorAll('.service-check').forEach(cb => cb.checked = false);
+            document.querySelectorAll('.custom-fee-row').forEach(row => row.remove());
             try {
                 const svRes = await fetch(`${API_URL}/hoadon/${inv.idHoaDon}/services`);
                 const savedServices = await svRes.json();
                 savedServices.forEach(s => {
-                    const cb = document.getElementById(`svc_${s.idDichVu}`);
-                    if (cb) {
-                        cb.checked = true;
-                        toggleQtyInput(s.idDichVu);
-                        const qtyInput = document.getElementById(`qty_${s.idDichVu}`);
-                        if (qtyInput) qtyInput.value = s.soLuong;
+                    if (s.idDichVu) {
+                        const cb = document.getElementById(`svc_${s.idDichVu}`);
+                        if (cb) {
+                            cb.checked = true;
+                            toggleQtyInput(s.idDichVu);
+                            const qtyInput = document.getElementById(`qty_${s.idDichVu}`);
+                            if (qtyInput) qtyInput.value = s.soLuong;
+                        }
+                    } else {
+                        // Dịch vụ / phụ phí custom
+                        addCustomFeeRow(s.TenDichVu, s.thanhTien / s.soLuong);
                     }
                 });
             } catch (err) { console.error('Lỗi lấy dịch vụ khi sửa:', err); }
@@ -436,10 +775,10 @@
             showConfirm('Xác nhận xóa hóa đơn này?', async () => {
                 const res = await fetch(`${API_URL}/hoadon/${id}`, { method: 'DELETE' });
                 if (res.ok) {
-                    alert('Đã xóa hóa đơn!');
+                    showToast('Đã xóa hóa đơn!');
                     fetchInvoices();
                 } else {
-                    alert('Lỗi khi xóa hóa đơn.');
+                    showToast('Lỗi khi xóa hóa đơn.', 'error');
                 }
             });
         }
@@ -449,10 +788,10 @@
             showConfirm('Xác nhận khách đã đóng tiền?', async () => {
                 const res = await fetch(`${API_URL}/hoadon/${id}/pay`, { method: 'POST' });
                 if (res.ok) {
-                    alert('Đã ghi thu tiền thành công!');
+                    showToast('Đã ghi thu tiền thành công!');
                     fetchInvoices();
                 } else {
-                    alert('Lỗi ghi thu.');
+                    showToast('Lỗi ghi thu.', 'error');
                 }
             });
         }
@@ -581,13 +920,172 @@
                             <button onclick="window.close()" class="btn btn-outline-secondary btn-lg ms-3">Đóng</button>
                         </div>
                     </div>
+                
+    
+                
+
+    <!-- Modal Đổi Mật Khẩu (V2 - Đồng bộ) -->
+    <div class="modal fade" id="changePasswordModal" tabindex="-1" aria-hidden="true" style="z-index: 2000;">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content shadow-lg border-0" style="border-radius: 20px;">
+                <div class="modal-header border-bottom">
+                    <h6 class="modal-title fw-bold text-adaptive"><i class="fas fa-shield-alt me-2 text-primary"></i>Đổi mật khẩu</h6>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-secondary">MẬT KHẨU CŨ</label>
+                        <div class="input-group">
+                            <span class="input-group-text border-end-0 text-secondary" style="border-radius: 12px 0 0 12px; border: 1px solid #dee2e6;"><i class="fas fa-lock small"></i></span>
+                            <input type="password" id="old-pass" class="form-control border-start-0" placeholder="••••••" style="border-radius: 0 12px 12px 0; border: 1px solid #dee2e6; padding: 12px;">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-secondary">MẬT KHẨU MỚI</label>
+                        <div class="input-group">
+                            <span class="input-group-text border-end-0 text-secondary" style="border-radius: 12px 0 0 12px; border: 1px solid #dee2e6;"><i class="fas fa-key small"></i></span>
+                            <input type="password" id="new-pass" class="form-control border-start-0" placeholder="••••••" style="border-radius: 0 12px 12px 0; border: 1px solid #dee2e6; padding: 12px;">
+                        </div>
+                    </div>
+                    <div class="mb-0">
+                        <label class="form-label small fw-bold text-secondary">XÁC NHẬN MẬT KHẨU</label>
+                        <div class="input-group">
+                            <span class="input-group-text border-end-0 text-secondary" style="border-radius: 12px 0 0 12px; border: 1px solid #dee2e6;"><i class="fas fa-check-double small"></i></span>
+                            <input type="password" id="confirm-pass" class="form-control border-start-0" placeholder="••••••" style="border-radius: 0 12px 12px 0; border: 1px solid #dee2e6; padding: 12px;">
+                        </div>
+                    </div>
+                </div>
+                
+</body>
                 </body>
                 </html>
             `);
             printWindow.document.close();
         }
 
+        
+        
         function logout() { localStorage.removeItem('user'); window.location.href = 'login.html'; }
-    </script>
+        
+        async function submitChangePassword() {
+            const oldPass = document.getElementById('old-pass').value;
+            const newPass = document.getElementById('new-pass').value;
+            const confirmPass = document.getElementById('confirm-pass').value;
+
+            if (!oldPass || !newPass || !confirmPass) {
+                if (typeof showToast === 'function') showToast('Vui lòng nhập đầy đủ thông tin!', 'warning');
+                else alert('Vui lòng nhập đầy đủ thông tin!');
+                return;
+            }
+
+            if (newPass !== confirmPass) {
+                if (typeof showToast === 'function') showToast('Mật khẩu mới không khớp!', 'error');
+                else alert('Mật khẩu mới không khớp!');
+                return;
+            }
+
+            try {
+                const user = JSON.parse(localStorage.getItem('user'));
+                const res = await fetch('/api/admin/change-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        idAdmin: user.idAdmin || user.idNguoiThue,
+                        oldPass,
+                        newPass,
+                        type: user.idAdmin ? 'admin' : 'tenant'
+                    })
+                });
+
+                const result = await res.json();
+                if (res.ok) {
+                    if (typeof showToast === 'function') showToast('Đổi mật khẩu thành công!', 'success');
+                    else alert('Đổi mật khẩu thành công!');
+                    const modalEl = document.getElementById('changePasswordModal');
+                    const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+                    modal.hide();
+                    document.getElementById('old-pass').value = '';
+                    document.getElementById('new-pass').value = '';
+                    document.getElementById('confirm-pass').value = '';
+                } else {
+                    if (typeof showToast === 'function') showToast(result.error || 'Lỗi đổi mật khẩu', 'error');
+                    else alert(result.error || 'Lỗi đổi mật khẩu');
+                }
+            } catch (error) {
+                if (typeof showToast === 'function') showToast('Lỗi kết nối máy chủ!', 'error');
+                else alert('Lỗi kết nối máy chủ!');
+            }
+        }
+    
+        // Anti-autofill watchdog
+        document.addEventListener('DOMContentLoaded', () => {
+            const searchInputs = ['searchContract', 'q_invoice_search', 'q_utility_search', 'tenantSearch', 'roomSearch'];
+            searchInputs.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    const clear = () => { if(el.value.toLowerCase()==='admin') el.value=''; };
+                    setTimeout(clear, 300);
+                    setTimeout(clear, 1000);
+                    el.addEventListener('focus', () => el.removeAttribute('readonly'));
+                }
+            });
+        });
+        
+        function setCycleFilter(value, text) {
+            document.getElementById('filterInvCycle').value = value;
+            document.getElementById('selectedCycleText').innerText = text;
+            filterInvoices();
+        }
+
+        function setInvStatusFilter(value, text, dotClass = '') {
+            const hiddenInput = document.getElementById('filterInvStatus');
+            const selectedText = document.getElementById('selectedInvStatusText');
+            
+            hiddenInput.value = value;
+            selectedText.innerHTML = dotClass ? `<span class="status-dot ${dotClass}"></span>${text}` : text;
+            
+            filterInvoices();
+        }
+
+        function clearInvFilters() {
+            setCycleFilter('', 'Tất cả các tháng');
+            setInvStatusFilter('', 'Tất cả trạng thái');
+            document.getElementById('q_invoice_search').value = '';
+            filterInvoices();
+        }
+</script>
+
+    <!-- Modal Đổi Mật Khẩu (Deep Cleaned) -->
+    <div class="modal fade" id="changePasswordModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content shadow-lg border-0" style="border-radius: 20px;">
+                <div class="modal-header border-bottom">
+                    <h6 class="modal-title fw-bold text-adaptive"><i class="fas fa-shield-alt me-2 text-primary"></i>Đổi mật khẩu</h6>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-secondary">MẬT KHẨU CŨ</label>
+                        <div class="input-group">
+                            <span class="input-group-text border-end-0 text-secondary" style="border-radius: 12px 0 0 12px; border: 1px solid #dee2e6;"><i class="fas fa-lock small"></i></span>
+                            <input type="password" id="old-pass" class="form-control border-start-0" placeholder="••••••" style="border-radius: 0 12px 12px 0; border: 1px solid #dee2e6; padding: 12px;">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-secondary">MẬT KHẨU MỚI</label>
+                        <div class="input-group">
+                            <span class="input-group-text border-end-0 text-secondary" style="border-radius: 12px 0 0 12px; border: 1px solid #dee2e6;"><i class="fas fa-key small"></i></span>
+                            <input type="password" id="new-pass" class="form-control border-start-0" placeholder="••••••" style="border-radius: 0 12px 12px 0; border: 1px solid #dee2e6; padding: 12px;">
+                        </div>
+                    </div>
+                    <div class="mb-0">
+                        <label class="form-label small fw-bold text-secondary">XÁC NHẬN MẬT KHẨU</label>
+                        <div class="input-group">
+                            <span class="input-group-text border-end-0 text-secondary" style="border-radius: 12px 0 0 12px; border: 1px solid #dee2e6;"><i class="fas fa-check-double small"></i></span>
+                            <input type="password" id="confirm-pass" class="form-control border-start-0" placeholder="••••••" style="border-radius: 0 12px 12px 0; border: 1px solid #dee2e6; padding: 12px;">
+                        </div>
+                    </div>
+                </div>
+                
 </body>
 </html>
